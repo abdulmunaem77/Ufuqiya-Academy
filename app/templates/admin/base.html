@@ -11,7 +11,7 @@
     <p class="admin__who">{{ current_user.name }}<small>{{ t('role.' ~ current_user.role) }}</small></p>
     <nav aria-label="admin">
       <ul>
-        {% macro item(perm, endpoint, label, **kw) %}{% if current_user.can(perm) %}<li><a href="{{ url_for(endpoint, **kw) }}" {% if request.path == url_for(endpoint, **kw) or (request.path.startswith(url_for(endpoint, **kw)) and url_for(endpoint, **kw) != url_for('admin.dashboard')) %}aria-current="page"{% endif %}>{{ t(label) }}</a></li>{% endif %}{% endmacro %}
+        {% macro item(perm, endpoint, label) %}{% if current_user.can(perm) %}{% set href = url_for(endpoint, **kwargs) %}<li><a href="{{ href }}" {% if request.path == href or (href != url_for('admin.dashboard') and request.path.startswith(href)) %}aria-current="page"{% endif %}>{{ t(label) }}</a></li>{% endif %}{% endmacro %}
         {{ item('dashboard', 'admin.dashboard', 'admin.nav.dashboard') }}
         {{ item('courses', 'admin.entity_list', 'entity.courses', entity='courses') }}
         {{ item('courses', 'admin.entity_list', 'entity.categories', entity='categories') }}

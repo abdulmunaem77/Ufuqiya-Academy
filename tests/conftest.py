@@ -14,6 +14,13 @@ PASSWORD = "Str0ng-Passw0rd!"
 @pytest.fixture()
 def app():
     app = create_app(TestConfig)
+
+    @app.before_request
+    def _fresh_csrf_per_request():
+        # Tests keep one app context open for direct DB access; Flask-WTF caches
+        # the token on ``g`` which would otherwise leak between requests.
+        from flask import g
+        g.pop("csrf_token", None)
     with app.app_context():
         db.create_all()
         seed_sample_content()
@@ -43,7 +50,10 @@ def csrf_from(html):
 
 def post(client, url, data=None, page=None, follow=False):
     """POST with a valid CSRF token fetched from ``page`` (a GET url)."""
-    token = csrf_from(client.get(page or url).get_data(as_text=True))
+    html = client.get(page or url).get_data(as_text=True)
+    if 'name="csrf_token"' not in html:  # tokens are per-session, any form page will do
+        html = client.get("/contact").get_data(as_text=True)
+    token = csrf_from(html)
     return client.post(url, data={**(data or {}), "csrf_token": token}, follow_redirects=follow)
 
 

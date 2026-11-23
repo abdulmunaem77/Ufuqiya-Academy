@@ -6,7 +6,7 @@ from flask_wtf import FlaskForm
 from wtforms import (BooleanField, DecimalField, HiddenField, IntegerField, PasswordField,
                      SelectField, StringField, TextAreaField)
 from wtforms.fields import DateTimeLocalField
-from wtforms.validators import (DataRequired, Email, EqualTo, Length, NumberRange, Optional,
+from wtforms.validators import (DataRequired, Email, InputRequired, EqualTo, Length, NumberRange, Optional,
                                 Regexp, ValidationError)
 
 from .models import ALL_ROLES, BOOKING_STATUSES, ENROLL_STATUSES, LEVELS, utcnow
@@ -35,6 +35,7 @@ class _F(FlaskForm):
 
 
 REQ = DataRequired(message="val.required")
+REQN = InputRequired(message="val.required")  # numbers: 0 is a valid value
 EMAIL = Email(message="val.email", check_deliverability=False)
 
 
@@ -135,20 +136,20 @@ class CourseForm(_Entity):
     description_ar = TextAreaField("description_ar", [REQ, length(8000)], filters=[strip])
     description_en = TextAreaField("description_en", [REQ, length(8000)], filters=[strip])
     level = SelectField("level", choices=[(l, l) for l in LEVELS])
-    price = DecimalField("price", [REQ, NumberRange(0, 100000, message="val.number")], places=2, default=Decimal("0"))
-    duration_hours = IntegerField("duration_hours", [REQ, NumberRange(1, 1000, message="val.number")])
+    price = DecimalField("price", [REQN, NumberRange(0, 100000, message="val.number")], places=2, default=Decimal("0"))
+    duration_hours = IntegerField("duration_hours", [REQN, NumberRange(1, 1000, message="val.number")])
     is_published = _bool("is_published")
     is_featured = _bool("is_featured")
     is_sample = _bool("is_sample")
 
 
 class LessonForm(_F):
-    position = IntegerField("position", [REQ, NumberRange(1, 500, message="val.number")])
+    position = IntegerField("position", [REQN, NumberRange(1, 500, message="val.number")])
     title_ar = StringField("title_ar", [REQ, length(200)], filters=[strip])
     title_en = StringField("title_en", [REQ, length(200)], filters=[strip])
     body_ar = TextAreaField("body_ar", [Optional(), length(8000)], filters=[strip])
     body_en = TextAreaField("body_en", [Optional(), length(8000)], filters=[strip])
-    minutes = IntegerField("minutes", [REQ, NumberRange(1, 600, message="val.number")], default=10)
+    minutes = IntegerField("minutes", [REQN, NumberRange(1, 600, message="val.number")], default=10)
 
 
 class WorkshopForm(_Entity):
@@ -161,9 +162,9 @@ class WorkshopForm(_Entity):
     description_ar = TextAreaField("description_ar", [REQ, length(8000)], filters=[strip])
     description_en = TextAreaField("description_en", [REQ, length(8000)], filters=[strip])
     starts_at = DateTimeLocalField("starts_at", [REQ], format="%Y-%m-%dT%H:%M")
-    duration_minutes = IntegerField("duration_minutes", [REQ, NumberRange(15, 1440, message="val.number")])
-    capacity = IntegerField("capacity", [REQ, NumberRange(1, 5000, message="val.number")])
-    price = DecimalField("price", [REQ, NumberRange(0, 100000, message="val.number")], places=2, default=Decimal("0"))
+    duration_minutes = IntegerField("duration_minutes", [REQN, NumberRange(15, 1440, message="val.number")])
+    capacity = IntegerField("capacity", [REQN, NumberRange(1, 5000, message="val.number")])
+    price = DecimalField("price", [REQN, NumberRange(0, 100000, message="val.number")], places=2, default=Decimal("0"))
     is_published = _bool("is_published")
     is_sample = _bool("is_sample")
 
@@ -175,8 +176,8 @@ class ServiceForm(_Entity):
     title_en = StringField("title_en", [REQ, length(200)], filters=[strip])
     summary_ar = StringField("summary_ar", [REQ, length(400)], filters=[strip])
     summary_en = StringField("summary_en", [REQ, length(400)], filters=[strip])
-    duration_minutes = IntegerField("duration_minutes", [REQ, NumberRange(15, 480, message="val.number")])
-    price = DecimalField("price", [REQ, NumberRange(0, 100000, message="val.number")], places=2, default=Decimal("0"))
+    duration_minutes = IntegerField("duration_minutes", [REQN, NumberRange(15, 480, message="val.number")])
+    price = DecimalField("price", [REQN, NumberRange(0, 100000, message="val.number")], places=2, default=Decimal("0"))
     is_published = _bool("is_published")
     is_sample = _bool("is_sample")
 

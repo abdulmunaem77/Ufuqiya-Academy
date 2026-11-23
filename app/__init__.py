@@ -103,7 +103,9 @@ def _register_errors(app):
     def e400(e): return page(400, "err.400.title", "err.400.msg")
 
     @app.errorhandler(CSRFError)
-    def ecsrf(e): return page(400, "err.csrf.title", "err.csrf.msg")
+    def ecsrf(e):
+        app.logger.warning("CSRF rejected on %s: %s", request.path, e.description)
+        return page(400, "err.csrf.title", "err.csrf.msg")
 
     @app.errorhandler(403)
     def e403(e): return page(403, "err.403.title", "err.403.msg")
