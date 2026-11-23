@@ -67,3 +67,12 @@ def audit_as(email, action, target="", details=""):
 
 def flash_t(key, category="info"):
     flash(key, category)  # translated at render time by the template
+
+
+def verified_or_redirect(back):
+    """When e-mail verification is enforced, unverified users may not transact."""
+    from flask import current_app
+    if current_app.config.get("REQUIRE_EMAIL_VERIFICATION") and not current_user.email_verified:
+        flash("auth.verify_required", "error")
+        return redirect(back)
+    return None

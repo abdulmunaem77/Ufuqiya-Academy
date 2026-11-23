@@ -18,6 +18,11 @@
     if (b) { var f = b.closest('.flash'); if (f) f.remove(); }
   });
 
+  // Print button (certificates)
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-print]')) window.print();
+  });
+
   // Confirm destructive POST forms
   document.addEventListener('submit', function (e) {
     var msg = e.target.getAttribute && e.target.getAttribute('data-confirm');

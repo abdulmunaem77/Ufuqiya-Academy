@@ -21,12 +21,14 @@ from ..forms import (AdminLoginForm, CategoryForm, ContentForm, CourseForm, Empt
                      InstructorForm, LessonForm, RoleForm, ServiceForm, StaffCreateForm,
                      StatusForm, TestimonialForm, WorkshopForm)
 from ..i18n import CONTENT_KEYS, site_default
-from ..models import (BOOKING_STATUSES, ENROLL_STATUSES, ROLE_OWNER, ROLE_STUDENT, STAFF_ROLES,
+from ..mailer import send_mail
+from ..models import (PAYMENT_STATUSES, EmailOutbox, Payment, BOOKING_STATUSES, ENROLL_STATUSES, ROLE_OWNER, ROLE_STUDENT, STAFF_ROLES,
                       AuditLog, Category, ConsultationBooking, ConsultationService, ContactMessage,
                       Course, Enrollment, Instructor, Lesson, SiteContent, Testimonial, User,
                       Workshop, WorkshopRegistration, utcnow)
+from .. import payments as pay_service
 from ..security import audit, audit_as, permission_required, safe_next
-from .auth import authenticate, start_session
+from .auth import authenticate, complete_login
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 PER = 20
@@ -83,9 +85,8 @@ def login():
     form = AdminLoginForm()
     if form.validate_on_submit():
         user = authenticate(form.email.data, form.password.data, staff_only=True)
-        if user:
-            start_session(user)  # staff sessions are never "remembered"
-            return redirect(safe_next("admin.dashboard"))
+        if user:  # staff sessions are never "remembered"; 2FA step handled inside
+            return complete_login(user, False, request.args.get("next") or request.form.get("next"), True)
         flash("auth.invalid", "error")
     return render_template("admin/login.html", form=form)
 
@@ -105,6 +106,7 @@ def dashboard():
         "registrations": WorkshopRegistration.query.filter_by(status="registered").count(),
         "pending_bookings": ConsultationBooking.query.filter_by(status="pending").count(),
         "new_messages": ContactMessage.query.filter_by(status="new").count(),
+        "pending_payments": Payment.query.filter_by(status="submitted").count(),
         "new_students_30d": User.query.filter(User.role == ROLE_STUDENT,
                                               User.created_at > now - timedelta(days=30)).count(),
     }
@@ -362,7 +364,13 @@ def _set_status(model, oid, allowed, perm, audit_name, back):
 
 @bp.route("/bookings/<int:oid>/status", methods=["POST"])
 def booking_status(oid):
-    return _set_status(ConsultationBooking, oid, BOOKING_STATUSES, "consultations", "booking_status", "admin.bookings")
+    resp = _set_status(ConsultationBooking, oid, BOOKING_STATUSES, "consultations", "booking_status", "admin.bookings")
+    b = db.session.get(ConsultationBooking, oid)
+    if b and b.status in ("confirmed", "cancelled"):
+        send_mail(b.user.email, f"Consultation {b.status}",
+                  f"{b.service.title_en} — {b.preferred_at:%Y-%m-%d %H:%M} UTC: {b.status}.\n"
+                  f"{b.service.title_ar} — الحالة: {b.status}", "booking_status")
+    return resp
 
 
 @bp.route("/enrollments")
@@ -489,7 +497,8 @@ def user_new():
         if User.query.filter_by(email=email).first():
             form.email.errors.append("val.email_taken")
         else:
-            u = User(email=email, name=form.name.data, role=form.role.data, must_change_password=True)
+            u = User(email=email, name=form.name.data, role=form.role.data, must_change_password=True,
+                     email_verified=True)
             u.set_password(form.password.data)
             db.session.add(u)
             db.session.commit()
@@ -560,3 +569,50 @@ def audit_log():
         q = q.filter(AuditLog.action.ilike(_like(action), escape="\\"))
     pagination = q.order_by(AuditLog.id.desc()).paginate(page=_page(), per_page=40, error_out=False)
     return render_template("admin/audit.html", pagination=pagination, action=action)
+
+
+# --------------------------------------------------------------- payments ---
+@bp.route("/payments")
+@permission_required("payments")
+def payments():
+    status = request.args.get("status")
+    q = Payment.query
+    if status in PAYMENT_STATUSES:
+        q = q.filter_by(status=status)
+    pagination = q.order_by(Payment.created_at.desc()).paginate(page=_page(), per_page=PER, error_out=False)
+    return render_template("admin/payments.html", pagination=pagination, status=status,
+                           statuses=PAYMENT_STATUSES, form=EmptyForm())
+
+
+@bp.route("/payments/<int:pid>/<decision>", methods=["POST"])
+@permission_required("payments")
+def payment_decide(pid, decision):
+    if decision not in ("confirm", "reject"):
+        abort(404)
+    p = db.get_or_404(Payment, pid)
+    if not EmptyForm().validate_on_submit():
+        abort(400)
+    if p.status not in ("awaiting", "submitted", "rejected"):
+        flash("admin.err.payment_final", "error")
+        return redirect(url_for("admin.payments"))
+    if decision == "confirm":
+        pay_service.confirm(p, current_user)
+    else:
+        pay_service.reject(p, current_user)
+    db.session.commit()
+    audit(f"payment_{decision}", f"payment:{p.id}", f"{p.amount} {p.currency} user:{p.user_id}")
+    send_mail(p.user.email, f"Payment {'confirmed' if decision == 'confirm' else 'rejected'}: {p.title}",
+              f"{p.title}: {'تم تأكيد الدفع وتفعيل طلبك' if decision == 'confirm' else 'تعذّر تأكيد الدفع، يرجى مراجعة المرجع وإعادة الإرسال'}\n"
+              f"{p.title}: payment {'confirmed — your request is now active' if decision == 'confirm' else 'could not be confirmed — please check the reference and resubmit'}.",
+              "payment_" + decision)
+    flash("admin.saved", "success")
+    return redirect(request.referrer if request.referrer and request.referrer.startswith(request.host_url)
+                    else url_for("admin.payments"))
+
+
+# ----------------------------------------------------------------- outbox ---
+@bp.route("/outbox")
+@permission_required("outbox")
+def outbox():
+    pagination = EmailOutbox.query.order_by(EmailOutbox.id.desc()).paginate(page=_page(), per_page=30, error_out=False)
+    return render_template("admin/outbox.html", pagination=pagination, mail_on=current_app.config["MAIL_ENABLED"])

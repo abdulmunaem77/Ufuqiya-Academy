@@ -5,8 +5,13 @@ from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db, limiter
 from ..forms import EmptyForm
-from ..models import (ENROLL_ACTIVE, ENROLL_PENDING, LEVELS, Category, Course, Enrollment,
+import secrets
+
+from ..media import embed_url
+from ..models import (ENROLL_ACTIVE, ENROLL_PENDING, LEVELS, Category, Certificate, Course, Enrollment,
                       Lesson, LessonProgress)
+from ..payments import cancel_open_payment, get_or_create_payment, payment_for
+from ..security import verified_or_redirect
 from ..security import audit
 
 bp = Blueprint("courses", __name__, url_prefix="/courses")
@@ -69,7 +74,9 @@ def detail(slug):
     course = _course_or_404(slug)
     related = (Course.query.filter(Course.category_id == course.category_id, Course.id != course.id,
                                    Course.is_published.is_(True)).limit(3).all())
-    return render_template("courses/detail.html", course=course, enrollment=_enrollment(course),
+    enr = _enrollment(course)
+    pay = payment_for(current_user, "course", enr.id) if enr and enr.status == "pending" else None
+    return render_template("courses/detail.html", course=course, enrollment=enr, pay=pay,
                            related=related, form=EmptyForm())
 
 
@@ -84,6 +91,9 @@ def enroll(slug):
     if existing and existing.status != "cancelled":
         flash("course.already", "info")
         return redirect(url_for("courses.detail", slug=slug))
+    blocked = verified_or_redirect(url_for("courses.detail", slug=slug))
+    if blocked:
+        return blocked
     status = ENROLL_ACTIVE if course.is_free else ENROLL_PENDING
     try:
         if existing:  # re-enrol after cancellation
@@ -94,8 +104,13 @@ def enroll(slug):
     except IntegrityError:
         db.session.rollback()
     audit("enroll", f"course:{course.id}", status)
-    flash("course.enrolled" if status == ENROLL_ACTIVE else "course.pending", "success")
-    return redirect(url_for("courses.learn" if status == ENROLL_ACTIVE else "courses.detail", slug=slug))
+    if status == ENROLL_ACTIVE:
+        flash("course.enrolled", "success")
+        return redirect(url_for("courses.learn", slug=slug))
+    enr = _enrollment(course)
+    pay = get_or_create_payment(current_user, "course", enr.id, course.title_en, course.price)
+    flash("course.pending", "success")
+    return redirect(url_for("pay.view", pid=pay.id))
 
 
 @bp.route("/<slug>/cancel", methods=["POST"])
@@ -106,6 +121,7 @@ def cancel(slug):
     if not EmptyForm().validate_on_submit() or not enr:
         abort(400)
     enr.status = "cancelled"
+    cancel_open_payment(current_user, "course", enr.id)
     db.session.commit()
     audit("enroll_cancel", f"course:{course.id}")
     flash("course.cancelled", "info")
@@ -125,8 +141,10 @@ def learn(slug):
     current_id = request.args.get("lesson", type=int)
     current = next((l for l in course.lessons if l.id == current_id), None) or next(
         (l for l in course.lessons if l.id not in done), None) or (course.lessons[0] if course.lessons else None)
+    progress = enr.progress()
     return render_template("courses/learn.html", course=course, done=done, current=current,
-                           progress=enr.progress(), form=EmptyForm())
+                           progress=progress, form=EmptyForm(), video=embed_url(current.video_url) if current else None,
+                           complete=progress[2] > 0 and progress[1] == progress[2])
 
 
 @bp.route("/<slug>/lessons/<int:lesson_id>/toggle", methods=["POST"])
@@ -148,3 +166,29 @@ def toggle_lesson(slug, lesson_id):
     except IntegrityError:
         db.session.rollback()
     return redirect(url_for("courses.learn", slug=slug, lesson=lesson.id))
+
+
+def _new_code():
+    return "UF-" + secrets.token_hex(5).upper()
+
+
+@bp.route("/<slug>/certificate")
+@login_required
+def certificate(slug):
+    """Issued only at 100% lesson completion; a public verify page exists per code."""
+    course = _course_or_404(slug)
+    enr = _enrollment(course)
+    if not enr or enr.status != ENROLL_ACTIVE:
+        abort(403)
+    pct, done, total = enr.progress()
+    if total == 0 or done < total:
+        flash("cert.not_ready", "info")
+        return redirect(url_for("courses.learn", slug=slug))
+    cert = Certificate.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+    if not cert:
+        cert = Certificate(user_id=current_user.id, course_id=course.id, code=_new_code(),
+                           holder_name=current_user.name)
+        db.session.add(cert)
+        db.session.commit()
+        audit("certificate_issued", f"certificate:{cert.id}")
+    return render_template("courses/certificate.html", cert=cert, verify_url=url_for("main.verify_certificate", code=cert.code, _external=True))

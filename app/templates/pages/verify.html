@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head with context %}
+{% block title %}{{ t('cert.verify_title') }}{% endblock %}
+{% block content %}
+{{ page_head(t('cert.verify_title')) }}
+<section class="section section--ivory"><div class="wrap prose">
+  {% if cert %}
+    <p class="notice-box notice-box--ok">{{ t('cert.valid') }}</p>
+    <dl class="dl-grid"><dt>{{ t('cert.code') }}</dt><dd><code dir="ltr">{{ cert.code }}</code></dd>
+      <dt>{{ t('cert.holder') }}</dt><dd>{{ cert.holder_name }}</dd>
+      <dt>{{ t('entity.courses') }}</dt><dd>{{ loc(cert.course, 'title') }}</dd>
+      <dt>{{ t('col.date') }}</dt><dd>{{ cert.issued_at|d }}</dd></dl>
+    {% if cert.course.is_sample %}<p class="notice-box">{{ t('cert.sample_note') }}</p>{% endif %}
+  {% else %}<p class="notice-box">{{ t('cert.invalid') }}</p>{% endif %}
+</div></section>
+{% endblock %}

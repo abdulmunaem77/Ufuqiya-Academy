@@ -51,7 +51,7 @@ def register_cli(app):
                 raise click.ClickException(
                     f"Password must be at least {MIN_PASSWORD_LENGTH} characters with letters and digits.")
         user = User(email=cfg["email"], name=cfg["name"], role=ROLE_OWNER,
-                    must_change_password=from_env)
+                    must_change_password=from_env, email_verified=True)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()

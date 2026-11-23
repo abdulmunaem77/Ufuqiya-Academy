@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import field, csrf with context %}
+{% block title %}{{ t('2fa.title') }}{% endblock %}
+{% block content %}
+<section class="auth"><div class="auth__card">
+  <h1>{{ t('2fa.title') }}</h1>
+  <p class="auth__sub">{{ t('2fa.login_sub') }}</p>
+  <form class="form" method="post" novalidate>{{ csrf() }}
+    {{ field(form.code, autofocus=true, maxlength=20, dir='ltr') }}
+    <button class="btn btn--navy btn--block btn--lg" type="submit">{{ t('2fa.verify') }}</button>
+  </form>
+</div></section>
+{% endblock %}

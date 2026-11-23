@@ -1,0 +1,17 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager, post_btn with context %}
+{% block title %}{{ t('admin.nav.payments') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.payments') }}</h1>
+<p class="fineprint">{{ t('admin.payments_note') }}</p>
+<nav class="tabs"><a href="{{ url_for('admin.payments') }}" {% if not status %}aria-current="page"{% endif %}>{{ t('common.all') }}</a>{% for s in statuses %}<a href="{{ url_for('admin.payments', status=s) }}" {% if status == s %}aria-current="page"{% endif %}>{{ t('pay.s.' ~ s) }}</a>{% endfor %}</nav>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('f.name') }}</th><th>{{ t('col.item') }}</th><th>{{ t('f.price') }}</th><th>{{ t('f.method') }}</th><th>{{ t('f.reference') }}</th><th>{{ t('f.status') }}</th><th></th></tr></thead><tbody>
+{% for p in pagination.items %}<tr><td>{{ p.user.name }}<small class="block">{{ p.user.email }}</small></td><td>{{ p.title }}<small class="block">{{ t('pay.k.' ~ p.kind) }}</small></td>
+<td>{{ p.amount }} {{ p.currency }}</td><td>{{ t('pay.m.' ~ p.method) if p.method else '—' }}</td><td class="notes">{{ p.reference }}<small class="block">{{ p.note }}</small></td>
+<td><span class="badge badge--{{ 'active' if p.status == 'confirmed' else ('cancelled' if p.status in ('rejected','cancelled') else 'pending') }}">{{ t('pay.s.' ~ p.status) }}</span></td>
+<td class="actions">{% if p.status in ('awaiting','submitted','rejected') %}
+ {{ post_btn(url_for('admin.payment_decide', pid=p.id, decision='confirm'), t('pay.confirm'), 'btn btn--sm btn--emerald', 'admin.confirm_payment') }}
+ {% if p.status != 'rejected' %}{{ post_btn(url_for('admin.payment_decide', pid=p.id, decision='reject'), t('pay.reject'), 'btn btn--sm btn--danger', 'admin.confirm_reject') }}{% endif %}{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, 'admin.payments', status=status) }}
+{% endblock %}

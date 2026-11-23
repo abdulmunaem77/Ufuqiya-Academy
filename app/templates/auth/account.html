@@ -16,7 +16,9 @@
     <aside class="info-card">
       <h2>{{ t('account.security') }}</h2>
       <p>{{ t('account.security_text') }}</p>
-      <p><a class="btn btn--emerald" href="{{ url_for('auth.change_password') }}">{{ t('account.change_password') }}</a></p>
+      <p><a class="btn btn--emerald" href="{{ url_for('auth.change_password') }}">{{ t('account.change_password') }}</a>
+         <a class="btn btn--ghost" href="{{ url_for('auth.twofa_manage') }}">{{ t('2fa.title') }}: {{ t('2fa.on') if current_user.totp_enabled else t('2fa.off') }}</a></p>
+      <p class="fineprint">{{ t('f.email') }}: {{ t('auth.verified_state') if current_user.email_verified else t('auth.unverified_state') }}</p>
       <p class="fineprint">{{ t('account.member_since') }}: {{ current_user.created_at|d }}</p>
       {{ post_btn(url_for('auth.logout'), t('nav.logout'), 'btn btn--ghost') }}
     </aside>

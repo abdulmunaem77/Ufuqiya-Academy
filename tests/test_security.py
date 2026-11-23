@@ -173,3 +173,34 @@ def test_rate_limit_register_and_contact():
         limiter.reset()
         db.session.remove()
         db.drop_all()
+
+
+def test_rate_limit_shared_across_instances_via_redis(monkeypatch):
+    """Two app instances (≈ two serverless workers) must share one counter when Redis is used."""
+    import os
+    uri = os.environ.get("TEST_REDIS_URL")
+    if not uri:
+        pytest.skip("set TEST_REDIS_URL to run")
+
+    class RedisRate(RateConfig):
+        RATELIMIT_STORAGE_URI = uri
+
+    a = create_app(RedisRate)
+    with a.app_context():
+        db.create_all()
+        limiter.reset()
+        ca = a.test_client()
+        codes = []
+        for _ in range(6):
+            tok = csrf_from(ca.get("/contact").get_data(as_text=True))
+            codes.append(ca.post("/contact", data={"csrf_token": tok, "name": "Sam", "email": "s@example.com", "topic": "general",
+                                                   "message": "hello there friend"}).status_code)
+        # a *second* app object pointing at the same Redis sees the exhausted limit
+        b = create_app(RedisRate)
+        cb = b.test_client()
+        tok = csrf_from(cb.get("/contact").get_data(as_text=True))
+        r = cb.post("/contact", data={"csrf_token": tok, "name": "Sam", "email": "s@example.com", "topic": "general",
+                                      "message": "hello there friend"})
+        assert 429 in codes and r.status_code == 429
+        limiter.reset()
+        db.session.remove(); db.drop_all()

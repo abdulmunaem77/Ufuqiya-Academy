@@ -14,6 +14,7 @@
       {{ field(form.remember) }}
       <button class="btn btn--navy btn--block btn--lg" type="submit">{{ t('nav.login') }}</button>
     </form>
+    <p class="auth__alt"><a href="{{ url_for('auth.forgot_password') }}">{{ t('auth.forgot_title') }}</a></p>
     <p class="auth__alt">{{ t('auth.no_account') }} <a href="{{ url_for('auth.register', next=request.args.get('next')) }}">{{ t('nav.register') }}</a></p>
   </div>
 </section>

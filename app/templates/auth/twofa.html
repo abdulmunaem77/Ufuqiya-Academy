@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, field, csrf with context %}
+{% block title %}{{ t('2fa.title') }}{% endblock %}
+{% block content %}
+{{ page_head(t('2fa.title'), t('2fa.sub')) }}
+<section class="section section--ivory"><div class="wrap split split--form">
+  <div class="card-form">
+    {% if current_user.totp_enabled %}
+      <p class="notice-box notice-box--ok">{{ t('2fa.on') }} · {{ t('2fa.codes_left', n=codes_left) }}</p>
+      {% if required %}<p class="fineprint">{{ t('2fa.required_note') }}</p>
+      {% else %}
+      <h2>{{ t('2fa.disable') }}</h2>
+      <form class="form" method="post" novalidate>{{ csrf() }}<input type="hidden" name="action" value="disable">
+        {{ field(disable_form.password, autocomplete='current-password') }}
+        {{ field(disable_form.code, dir='ltr') }}
+        <button class="btn btn--danger" type="submit">{{ t('2fa.disable') }}</button></form>
+      {% endif %}
+    {% elif secret %}
+      <h2>{{ t('2fa.step1') }}</h2>
+      <div class="qr" aria-label="QR">{{ qr|safe }}</div>
+      <p class="fineprint">{{ t('2fa.manual') }}</p><p class="secret"><code dir="ltr">{{ secret }}</code></p>
+      <h2>{{ t('2fa.step2') }}</h2>
+      <form class="form" method="post" novalidate>{{ csrf() }}<input type="hidden" name="action" value="enable">
+        {{ field(enable_form.code, autofocus=true, dir='ltr', maxlength=20) }}
+        <button class="btn btn--emerald" type="submit">{{ t('2fa.enable') }}</button></form>
+    {% else %}
+      {% if required %}<p class="notice-box">{{ t('2fa.required_note') }}</p>{% endif %}
+      <form method="post">{{ csrf() }}<input type="hidden" name="action" value="start">
+        <button class="btn btn--navy btn--lg" type="submit">{{ t('2fa.start') }}</button></form>
+    {% endif %}
+  </div>
+  <aside class="info-card"><h2>{{ t('2fa.why_t') }}</h2><p>{{ t('2fa.why_d') }}</p></aside>
+</div></section>
+{% endblock %}

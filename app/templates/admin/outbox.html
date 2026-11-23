@@ -1,0 +1,13 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager with context %}
+{% block title %}{{ t('admin.nav.outbox') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.outbox') }}</h1>
+<p class="notice-box{% if mail_on %} notice-box--ok{% endif %}">{{ t('admin.mail_on') if mail_on else t('admin.mail_off') }}</p>
+<p class="fineprint">{{ t('admin.outbox_note') }}</p>
+<div class="stack">{% for m in pagination.items %}
+<article class="panel msg"><header><div><b>{{ m.subject }}</b><small class="block">{{ m.to_email }} · {{ m.created_at|dt }} · <code>{{ m.kind }}</code></small></div>
+<span class="badge badge--{{ 'active' if m.status == 'sent' else ('cancelled' if m.status == 'failed' else 'pending') }}">{{ m.status }}{% if m.error %} ({{ m.error }}){% endif %}</span></header><p>{{ m.body }}</p></article>
+{% else %}<p class="empty">{{ t('common.none_yet') }}</p>{% endfor %}</div>
+{{ pager(pagination, 'admin.outbox') }}
+{% endblock %}

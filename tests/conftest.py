@@ -21,6 +21,7 @@ def app():
         # the token on ``g`` which would otherwise leak between requests.
         from flask import g
         g.pop("csrf_token", None)
+        g.pop("_login_user", None)  # Flask-Login caches current_user on g as well
     with app.app_context():
         db.create_all()
         seed_sample_content()

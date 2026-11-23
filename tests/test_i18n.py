@@ -32,6 +32,8 @@ def test_dynamic_keys(app):
     need |= {f"level.{x}" for x in LEVELS} | {f"status.{x}" for x in ENROLL_STATUSES + BOOKING_STATUSES}
     need |= {f"role.{x}" for x in ALL_ROLES} | {f"topic.{x}" for x in forms.TOPICS}
     need |= {f"content.{k}" for k in CONTENT_KEYS}
+    from app.models import PAYMENT_KINDS, PAYMENT_STATUSES
+    need |= {f"pay.s.{x}" for x in PAYMENT_STATUSES} | {f"pay.k.{x}" for x in PAYMENT_KINDS} | {f"pay.m.{x}" for x in forms.PAY_METHODS}
     need |= {"status.new", "status.read", "status.resolved", "status.disabled", "status.active"}
     with app.test_request_context():
         for name, cls in vars(forms).items():

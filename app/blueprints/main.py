@@ -3,7 +3,7 @@ from flask_login import current_user
 
 from ..extensions import db, limiter
 from ..forms import ContactForm
-from ..models import (Category, ConsultationService, ContactMessage, Course, Testimonial,
+from ..models import (Certificate, Category, ConsultationService, ContactMessage, Course, Testimonial,
                       Workshop, utcnow)
 from ..security import audit, is_safe_next
 from .. import current_lang
@@ -55,6 +55,8 @@ def contact():
         db.session.add(ContactMessage(name=form.name.data, email=form.email.data.lower(),
                                       topic=form.topic.data, message=form.message.data))
         db.session.commit()
+        from ..mailer import notify_staff
+        notify_staff(f"New contact message from {form.name.data}", f"{form.email.data} ({form.topic.data}):\n\n{form.message.data}", "contact")
         flash("contact.sent", "success")
         return redirect(url_for("main.contact"))
     return render_template("pages/contact.html", form=form)
@@ -76,3 +78,9 @@ def set_language(code):
 def robots():
     return ("User-agent: *\nDisallow: /admin/\nDisallow: /dashboard\nDisallow: /account\n",
             200, {"Content-Type": "text/plain; charset=utf-8"})
+
+
+@bp.route("/verify/<code>")
+def verify_certificate(code):
+    cert = Certificate.query.filter_by(code=code[:24].upper()).first()
+    return render_template("pages/verify.html", cert=cert, code=code[:24]), (200 if cert else 404)

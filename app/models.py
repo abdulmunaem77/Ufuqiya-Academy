@@ -27,11 +27,11 @@ ALL_ROLES = STAFF_ROLES + (ROLE_STUDENT,)
 # role -> permissions. Enforced server-side by @permission_required.
 ROLE_PERMISSIONS = {
     ROLE_OWNER: {"dashboard", "courses", "workshops", "consultations", "students",
-                 "enrollments", "content", "messages", "users", "audit"},
+                 "enrollments", "content", "messages", "users", "audit", "payments", "outbox"},
     ROLE_ADMIN: {"dashboard", "courses", "workshops", "consultations", "students",
-                 "enrollments", "content", "messages"},
+                 "enrollments", "content", "messages", "payments"},
     ROLE_EDITOR: {"dashboard", "courses", "workshops", "content"},
-    ROLE_SUPPORT: {"dashboard", "consultations", "students", "enrollments", "messages"},
+    ROLE_SUPPORT: {"dashboard", "consultations", "students", "enrollments", "messages", "payments"},
     ROLE_STUDENT: set(),
 }
 
@@ -50,6 +50,12 @@ class User(UserMixin, db.Model):
     locked_until = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
     last_login_at = db.Column(db.DateTime)
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    # TOTP two-factor authentication (RFC 6238)
+    totp_secret = db.Column(db.String(64))
+    totp_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    totp_last_step = db.Column(db.Integer, nullable=False, default=0)  # replay protection
+    backup_codes = db.Column(db.Text, default="")  # newline-separated HMAC digests
 
     enrollments = db.relationship("Enrollment", back_populates="user", cascade="all, delete-orphan")
 
@@ -181,6 +187,7 @@ class Lesson(Bilingual, db.Model):
     title_en = db.Column(db.String(200), nullable=False)
     body_ar = db.Column(db.Text, default="")
     body_en = db.Column(db.Text, default="")
+    video_url = db.Column(db.String(300), default="")  # YouTube/Vimeo only (validated)
     minutes = db.Column(db.Integer, nullable=False, default=10)
     course = db.relationship("Course", back_populates="lessons")
 
@@ -259,7 +266,7 @@ class WorkshopRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     workshop_id = db.Column(db.Integer, db.ForeignKey("workshops.id"), nullable=False, index=True)
-    status = db.Column(db.String(20), nullable=False, default="registered")  # registered|cancelled
+    status = db.Column(db.String(20), nullable=False, default="registered")  # registered|pending|cancelled
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
     user = db.relationship("User")
     workshop = db.relationship("Workshop", back_populates="registrations")
@@ -343,3 +350,56 @@ class AuditLog(db.Model):
     target = db.Column(db.String(120), default="")
     details = db.Column(db.Text, default="")
     ip = db.Column(db.String(64), default="")
+
+
+PAYMENT_KINDS = ("course", "workshop", "consultation")
+PAYMENT_STATUSES = ("awaiting", "submitted", "confirmed", "rejected", "cancelled")
+
+
+class Payment(db.Model):
+    """Manual-payment ledger. The platform processes NO card/online transactions:
+    a student pays offline (e.g. bank transfer), submits the reference they were
+    given, and staff confirm or reject it. Nothing here is a real charge."""
+    __tablename__ = "payments"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    kind = db.Column(db.String(20), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)  # enrollment / workshop_registration / booking id
+    title = db.Column(db.String(300), nullable=False, default="")  # snapshot of what is being paid for
+    amount = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    currency = db.Column(db.String(8), nullable=False, default="USD")
+    method = db.Column(db.String(60), default="")
+    reference = db.Column(db.String(120), default="")  # supplied by the student
+    note = db.Column(db.String(500), default="")
+    status = db.Column(db.String(20), nullable=False, default="awaiting", index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    decided_at = db.Column(db.DateTime)
+    decided_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user = db.relationship("User", foreign_keys=[user_id])
+
+
+class Certificate(db.Model):
+    __tablename__ = "certificates"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", name="uq_certificate"),)
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(24), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+    holder_name = db.Column(db.String(120), nullable=False)  # snapshot at issue time
+    issued_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    user = db.relationship("User")
+    course = db.relationship("Course")
+
+
+class EmailOutbox(db.Model):
+    """Every e-mail the app produces. status: sent | failed | not_configured.
+    Visible to the owner only (bodies can contain one-time links)."""
+    __tablename__ = "email_outbox"
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+    to_email = db.Column(db.String(254), nullable=False)
+    kind = db.Column(db.String(40), nullable=False)
+    subject = db.Column(db.String(300), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="not_configured")
+    error = db.Column(db.String(300), default="")

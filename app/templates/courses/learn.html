@@ -14,11 +14,13 @@
           <a href="{{ url_for('courses.learn', slug=course.slug, lesson=l.id) }}"><i aria-hidden="true">{{ '✓' if l.id in done else loop.index }}</i><span>{{ loc(l, 'title') }}</span></a>
         </li>{% endfor %}
       </ol>
+      {% if complete %}<p class="learn__cert"><a class="btn btn--gold btn--block" href="{{ url_for('courses.certificate', slug=course.slug) }}">{{ t('cert.get') }}</a></p>{% endif %}
     </aside>
     <article class="learn__main">
       {% if current %}
       <p class="eyebrow eyebrow--emerald">{{ t('course.lesson_n', n=current.position) }} · {{ t('course.minutes', n=current.minutes) }}</p>
       <h2>{{ loc(current, 'title') }}</h2>
+      {% if video %}<div class="video"><iframe src="{{ video }}" title="{{ loc(current, 'title') }}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture"></iframe></div>{% endif %}
       <div class="prose">{{ loc(current, 'body')|paras }}</div>
       <form method="post" action="{{ url_for('courses.toggle_lesson', slug=course.slug, lesson_id=current.id) }}">{{ csrf() }}
         <button class="btn {{ 'btn--ghost' if current.id in done else 'btn--emerald' }}" type="submit">{{ t('course.mark_undone') if current.id in done else t('course.mark_done') }}</button>

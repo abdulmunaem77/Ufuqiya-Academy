@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('cert.title') }}{% endblock %}
+{% block body_class %}cert-page{% endblock %}
+{% block content %}
+<section class="section section--sand"><div class="wrap">
+  <p class="no-print"><button type="button" class="btn btn--navy" data-print>{{ t('cert.print') }}</button>
+    <a class="btn btn--ghost" href="{{ url_for('courses.learn', slug=cert.course.slug) }}">{{ t('common.back') }}</a></p>
+  <article class="certificate">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="150" height="119">
+    <p class="certificate__eyebrow">{{ t('cert.title') }}</p>
+    <p>{{ t('cert.awarded') }}</p>
+    <h1>{{ cert.holder_name }}</h1>
+    <p>{{ t('cert.completed') }}</p>
+    <h2>{{ loc(cert.course, 'title') }}</h2>
+    <p class="certificate__meta">{{ cert.issued_at|d }} · <code dir="ltr">{{ cert.code }}</code></p>
+    <p class="certificate__verify">{{ t('cert.verify_at') }} <span dir="ltr">{{ verify_url }}</span></p>
+    {% if cert.course.is_sample %}<p class="certificate__sample">{{ t('cert.sample_note') }}</p>{% endif %}
+  </article>
+</div></section>
+{% endblock %}

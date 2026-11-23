@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head with context %}
+{% block title %}{{ t('2fa.codes_title') }}{% endblock %}
+{% block content %}
+{{ page_head(t('2fa.codes_title'), t('2fa.codes_sub')) }}
+<section class="section section--ivory"><div class="wrap">
+  <ul class="codes">{% for c in codes %}<li><code dir="ltr">{{ c }}</code></li>{% endfor %}</ul>
+  <p><a class="btn btn--navy" href="{{ url_for('auth.twofa_manage') }}">{{ t('common.back') }}</a></p>
+</div></section>
+{% endblock %}

@@ -31,6 +31,7 @@
         <a class="btn btn--emerald btn--block btn--lg" href="{{ url_for('courses.learn', slug=course.slug) }}">{{ t('course.continue') }}</a>
       {% elif enrollment and enrollment.status == 'pending' %}
         <p class="notice-box">{{ t('course.pending') }}</p>
+        {% if pay %}<a class="btn btn--gold btn--block" href="{{ url_for('pay.view', pid=pay.id) }}">{{ t('pay.go') }}</a>{% endif %}
         <a class="btn btn--ghost btn--block" href="{{ url_for('main.contact', topic='course') }}">{{ t('course.contact_us') }}</a>
       {% elif current_user.is_authenticated %}
         <form method="post" action="{{ url_for('courses.enroll', slug=course.slug) }}">{{ csrf() }}

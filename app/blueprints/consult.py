@@ -6,7 +6,9 @@ from flask_login import current_user, login_required
 from ..extensions import db, limiter
 from ..forms import BookingForm, EmptyForm
 from ..models import ConsultationBooking, ConsultationService, utcnow
-from ..security import audit
+from ..mailer import notify_staff
+from ..payments import cancel_open_payment, get_or_create_payment
+from ..security import audit, verified_or_redirect
 
 bp = Blueprint("consult", __name__, url_prefix="/consultations")
 
@@ -30,6 +32,9 @@ def index():
 def book(slug):
     service = _service_or_404(slug)
     form = BookingForm()
+    blocked = verified_or_redirect(url_for("consult.index"))
+    if blocked:
+        return blocked
     if form.validate_on_submit():
         local = form.when.data.replace(tzinfo=current_app.config["ACADEMY_TZ"])
         when = local.astimezone(timezone.utc).replace(tzinfo=None)
@@ -49,6 +54,11 @@ def book(slug):
             db.session.add(b)
             db.session.commit()
             audit("consult_book", f"booking:{b.id}")
+            notify_staff(f"New consultation request #{b.id}", f"{current_user.email}: {service.title_en} at {when} UTC", "booking")
+            if service.price:
+                pay = get_or_create_payment(current_user, "consultation", b.id, service.title_en, service.price)
+                flash("consult.booked_pay", "success")
+                return redirect(url_for("pay.view", pid=pay.id))
             flash("consult.booked", "success")
             return redirect(url_for("student.dashboard"))
     return render_template("consult/book.html", service=service, form=form)
@@ -63,6 +73,7 @@ def cancel(booking_id):
     if not EmptyForm().validate_on_submit() or b.status not in ("pending", "confirmed"):
         abort(400)
     b.status = "cancelled"
+    cancel_open_payment(current_user, "consultation", b.id)
     db.session.commit()
     audit("consult_cancel", f"booking:{b.id}")
     flash("consult.cancelled", "info")

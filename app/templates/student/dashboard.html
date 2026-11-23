@@ -25,7 +25,9 @@
         {% else %}<p class="fineprint">{{ t('course.pending') }}</p>{% endif %}
       </div>
       <div class="card__foot">
-        {% if e.status == 'active' %}<a class="btn btn--emerald btn--sm" href="{{ url_for('courses.learn', slug=e.course.slug) }}">{{ t('course.continue') }}</a>{% else %}<span></span>{% endif %}
+        {% if e.status == 'active' %}<span><a class="btn btn--emerald btn--sm" href="{{ url_for('courses.learn', slug=e.course.slug) }}">{{ t('course.continue') }}</a>
+          {% if p[0] == 100 %}<a class="btn btn--gold btn--sm" href="{{ url_for('courses.certificate', slug=e.course.slug) }}">{{ t('cert.get') }}</a>{% endif %}</span>
+        {% elif pays.get(('course', e.id)) %}<a class="btn btn--gold btn--sm" href="{{ url_for('pay.view', pid=pays[('course', e.id)].id) }}">{{ t('pay.go') }}</a>{% else %}<span></span>{% endif %}
         {{ post_btn(url_for('courses.cancel', slug=e.course.slug), t('common.cancel'), 'btn btn--sm btn--ghost', 'dash.cancel_confirm') }}
       </div>
     </article>{% endfor %}
@@ -35,13 +37,14 @@
   <h2 class="mt">{{ t('dash.my_workshops') }}</h2>
   {% if regs %}
   <ul class="rows">{% for r in regs %}<li><div><a href="{{ url_for('workshops.detail', slug=r.workshop.slug) }}"><b>{{ loc(r.workshop, 'title') }}</b></a><small>{{ r.workshop.starts_at|dt }} ({{ tzname }})</small></div>
-    <span class="badge {{ 'badge--active' if r.workshop.starts_at > now else '' }}">{{ t('ws.upcoming_one') if r.workshop.starts_at > now else t('ws.ended') }}</span></li>{% endfor %}</ul>
+    <div class="rows__end">{% if r.status == 'pending' and pays.get(('workshop', r.id)) %}<a class="btn btn--gold btn--sm" href="{{ url_for('pay.view', pid=pays[('workshop', r.id)].id) }}">{{ t('pay.go') }}</a>{% endif %}
+    <span class="badge {{ 'badge--active' if r.status == 'registered' and r.workshop.starts_at > now else 'badge--pending' if r.status == 'pending' else '' }}">{{ t('status.pending') if r.status == 'pending' else (t('ws.upcoming_one') if r.workshop.starts_at > now else t('ws.ended')) }}</span></div></li>{% endfor %}</ul>
   {% else %}<p class="empty">{{ t('dash.no_workshops') }} <a href="{{ url_for('workshops.index') }}">{{ t('nav.workshops') }}</a></p>{% endif %}
 
   <h2 class="mt">{{ t('dash.my_bookings') }}</h2>
   {% if bookings %}
   <ul class="rows">{% for b in bookings %}<li><div><b>{{ loc(b.service, 'title') }}</b><small>{{ b.preferred_at|dt }} ({{ tzname }})</small></div>
-    <div class="rows__end"><span class="badge badge--{{ b.status }}">{{ t('status.' ~ b.status) }}</span>
+    <div class="rows__end">{% if pays.get(('consultation', b.id)) %}{% set bp = pays[('consultation', b.id)] %}<a class="badge badge--{{ 'active' if bp.status == 'confirmed' else 'pending' }}" href="{{ url_for('pay.view', pid=bp.id) }}">{{ t('pay.s.' ~ bp.status) }}</a>{% endif %}<span class="badge badge--{{ b.status }}">{{ t('status.' ~ b.status) }}</span>
     {% if b.status in ('pending','confirmed') %}{{ post_btn(url_for('consult.cancel', booking_id=b.id), t('common.cancel'), 'btn btn--sm btn--ghost', 'dash.cancel_confirm') }}{% endif %}</div></li>{% endfor %}</ul>
   {% else %}<p class="empty">{{ t('dash.no_bookings') }} <a href="{{ url_for('consult.index') }}">{{ t('nav.consult') }}</a></p>{% endif %}
 </div></section>

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, field, csrf with context %}
+{% block title %}{{ t('pay.title') }}{% endblock %}
+{% block content %}
+{{ page_head(t('pay.title'), p.title) }}
+<section class="section section--ivory"><div class="wrap split split--form">
+  <div class="card-form">
+    <p><span class="badge badge--{{ 'active' if p.status == 'confirmed' else ('cancelled' if p.status in ('rejected','cancelled') else 'pending') }}">{{ t('pay.s.' ~ p.status) }}</span></p>
+    <h2>{{ money(p.amount) }}</h2>
+    {% if p.status == 'confirmed' %}<p class="notice-box notice-box--ok">{{ t('pay.confirmed_note') }}</p>
+    {% elif p.status == 'cancelled' %}<p class="notice-box">{{ t('pay.cancelled_note') }}</p>
+    {% else %}
+      {% if p.status == 'submitted' %}<p class="notice-box">{{ t('pay.submitted_note') }}</p>{% endif %}
+      {% if p.status == 'rejected' %}<p class="notice-box">{{ t('pay.rejected_note') }}</p>{% endif %}
+      {% if editable %}
+      <form class="form" method="post" novalidate>{{ csrf() }}
+        {{ field(form.method, prefix='pay.m.') }}
+        {{ field(form.reference, maxlength=120, hint='pay.ref_hint') }}
+        {{ field(form.note, maxlength=500) }}
+        <button class="btn btn--navy btn--lg" type="submit">{{ t('pay.submit') }}</button></form>
+      {% else %}<dl class="dl-grid"><dt>{{ t('f.method') }}</dt><dd>{{ t('pay.m.' ~ p.method) if p.method else '—' }}</dd><dt>{{ t('f.reference') }}</dt><dd>{{ p.reference }}</dd></dl>{% endif %}
+    {% endif %}
+    <p><a class="link-arrow" href="{{ url_for('student.dashboard') }}">{{ t('nav.dashboard') }}</a></p>
+  </div>
+  <aside class="info-card"><h2>{{ t('pay.how') }}</h2><p class="pre">{{ instructions }}</p><p class="fineprint">{{ t('course.pay_note') }}</p></aside>
+</div></section>
+{% endblock %}

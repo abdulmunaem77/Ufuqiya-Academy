@@ -26,6 +26,8 @@ SITE_DEFAULTS = {
                    "Ufuqia Academy for Training & Consulting is a learning platform built on the belief that useful knowledge and applied skills are the way forward for people and organisations. We offer clear, practical content and accompany learners from understanding to application."),
     "footer_blurb": ("معرفة نافعة، ومهارات تصنع المستقبل.", "Useful knowledge, and skills that shape the future."),
     "contact_email": ("info@example.com (بريد تجريبي — يُستبدل ببريد الأكاديمية)", "info@example.com (placeholder — replace with the academy's address)"),
+    "payment_instructions": ("للدفع حوّل المبلغ إلى حساب الأكاديمية ثم أدخل رقم الحوالة/المرجع في النموذج أدناه. (بيانات الحساب: تُضاف من لوحة التحكم ← محتوى الموقع.)",
+                             "To pay, transfer the amount to the academy's account, then enter the transfer number/reference in the form below. (Account details: add them in Control panel → Site content.)"),
     "contact_hours": ("الأحد – الخميس، 9 صباحًا – 5 مساءً", "Sunday – Thursday, 9:00 – 17:00"),
 }
 CONTENT_KEYS = tuple(SITE_DEFAULTS)
@@ -363,6 +365,94 @@ T = {
     "err.500.title": ("حدث خطأ", "Something went wrong"), "err.500.msg": ("حدث خطأ غير متوقع من جانبنا. تم تسجيله وسنعالجه.", "An unexpected error occurred on our side. It has been logged."),
     "err.home": ("العودة إلى الرئيسية", "Back to home"),
 }
+
+
+T.update({
+    # ---- e-mail verification / password reset ---------------------------------
+    "auth.forgot_title": ("نسيت كلمة المرور؟", "Forgot your password?"),
+    "auth.forgot_sub": ("أدخل بريدك وسنرسل رابط إعادة التعيين.", "Enter your e-mail and we will send a reset link."),
+    "auth.mail_off": ("خدمة البريد غير مفعّلة على هذا الخادم حاليًا؛ إن لم يصلك رابط فتواصل مع الإدارة لإصدار كلمة مرور مؤقتة.",
+                      "E-mail sending is not enabled on this server yet; if no link arrives, ask the staff to issue a temporary password."),
+    "auth.send_link": ("إرسال الرابط", "Send link"),
+    "auth.reset_sent": ("إن كان البريد مسجّلًا فقد أُرسل إليه رابط إعادة التعيين.", "If that e-mail is registered, a reset link has been sent."),
+    "auth.reset_bad": ("رابط إعادة التعيين غير صالح أو منتهٍ. اطلب رابطًا جديدًا.", "The reset link is invalid or expired. Request a new one."),
+    "auth.reset_title": ("كلمة مرور جديدة", "Set a new password"),
+    "auth.verify_sent": ("أرسلنا رابط تأكيد البريد الإلكتروني.", "We sent an e-mail confirmation link."),
+    "auth.verify_bad": ("رابط التأكيد غير صالح أو منتهٍ.", "The confirmation link is invalid or expired."),
+    "auth.verified": ("تم تأكيد بريدك الإلكتروني.", "Your e-mail is confirmed."),
+    "auth.verify_required": ("أكّد بريدك الإلكتروني أولًا للمتابعة.", "Confirm your e-mail address first to continue."),
+    "auth.verify_banner": ("بريدك الإلكتروني غير مؤكَّد بعد.", "Your e-mail address is not confirmed yet."),
+    "auth.resend": ("إعادة إرسال الرابط", "Resend the link"),
+    "auth.verified_state": ("مؤكَّد ✓", "confirmed ✓"),
+    "auth.unverified_state": ("غير مؤكَّد", "not confirmed"),
+    "auth.2fa_expired": ("انتهت مهلة التحقق، سجّل الدخول من جديد.", "Verification timed out; please sign in again."),
+
+    # ---- two-factor ---------------------------------------------------------------
+    "2fa.title": ("المصادقة الثنائية", "Two-factor authentication"),
+    "2fa.sub": ("طبقة حماية إضافية برمز يتجدد كل 30 ثانية من تطبيق المصادقة.", "An extra layer of protection with a code that changes every 30 seconds in an authenticator app."),
+    "2fa.login_sub": ("أدخل الرمز من تطبيق المصادقة أو أحد رموز الطوارئ.", "Enter the code from your authenticator app, or a backup code."),
+    "2fa.verify": ("تحقق", "Verify"), "2fa.on": ("مفعّلة", "enabled"), "2fa.off": ("غير مفعّلة", "off"),
+    "2fa.codes_left": ("رموز الطوارئ المتبقية: {n}", "Backup codes left: {n}"),
+    "2fa.required_note": ("المصادقة الثنائية إلزامية لحسابات الفريق ولا يمكن تعطيلها.", "Two-factor authentication is mandatory for staff accounts and cannot be disabled."),
+    "2fa.disable": ("تعطيل المصادقة الثنائية", "Disable two-factor"),
+    "2fa.step1": ("1) امسح الرمز بتطبيق المصادقة", "1) Scan the code with your authenticator app"),
+    "2fa.step2": ("2) أدخل الرمز المكوّن من 6 أرقام للتأكيد", "2) Enter the 6-digit code to confirm"),
+    "2fa.manual": ("أو أدخل هذا المفتاح يدويًا:", "Or enter this key manually:"),
+    "2fa.enable": ("تفعيل", "Enable"), "2fa.start": ("بدء الإعداد", "Start setup"),
+    "2fa.why_t": ("لماذا؟", "Why?"),
+    "2fa.why_d": ("حتى لو سُرقت كلمة المرور لن يستطيع أحد الدخول دون جهازك.", "Even if your password is stolen, nobody can sign in without your device."),
+    "2fa.codes_title": ("رموز الطوارئ", "Backup codes"),
+    "2fa.codes_sub": ("احفظها الآن في مكان آمن؛ تظهر مرة واحدة فقط ويصلح كل رمز لاستخدام واحد.", "Save them now somewhere safe; they are shown once and each works a single time."),
+    "2fa.disabled": ("تم تعطيل المصادقة الثنائية.", "Two-factor authentication disabled."),
+    "val.2fa_code": ("الرمز غير صحيح.", "The code is not correct."),
+    "val.video_url": ("رابط يوتيوب أو فيميو (https) فقط.", "Only https YouTube or Vimeo links are allowed."),
+
+    # ---- manual payments --------------------------------------------------------------------
+    "pay.title": ("الدفع", "Payment"), "pay.go": ("إتمام الدفع", "Complete payment"),
+    "pay.how": ("طريقة الدفع", "How to pay"), "pay.submit": ("إرسال بيانات الدفع", "Submit payment details"),
+    "pay.submitted": ("تم إرسال بيانات الدفع وستراجعها الإدارة.", "Payment details sent; the academy will review them."),
+    "pay.submitted_note": ("بانتظار مراجعة الإدارة لتأكيد الدفع.", "Waiting for the academy to verify the payment."),
+    "pay.rejected_note": ("تعذّر تأكيد الدفع. صحّح المرجع وأعد الإرسال.", "The payment could not be confirmed. Correct the reference and resubmit."),
+    "pay.confirmed_note": ("تم تأكيد الدفع وتفعيل طلبك. شكرًا لك.", "Payment confirmed and your request is active. Thank you."),
+    "pay.cancelled_note": ("أُلغي هذا الطلب.", "This request was cancelled."),
+    "pay.ref_hint": ("رقم الحوالة أو إيصال الدفع كما ظهر لك.", "The transfer number or receipt reference you were given."),
+    "pay.confirm": ("تأكيد الدفع", "Confirm payment"), "pay.reject": ("رفض", "Reject"),
+    "pay.s.awaiting": ("بانتظار الدفع", "Awaiting payment"), "pay.s.submitted": ("بانتظار المراجعة", "Awaiting review"),
+    "pay.s.confirmed": ("مؤكَّد", "Confirmed"), "pay.s.rejected": ("مرفوض", "Rejected"), "pay.s.cancelled": ("ملغى", "Cancelled"),
+    "pay.m.bank_transfer": ("حوالة بنكية", "Bank transfer"), "pay.m.cash": ("نقدًا", "Cash"),
+    "pay.m.wallet": ("محفظة إلكترونية", "E-wallet"), "pay.m.other": ("أخرى", "Other"),
+    "pay.k.course": ("دورة", "Course"), "pay.k.workshop": ("ورشة", "Workshop"), "pay.k.consultation": ("استشارة", "Consultation"),
+    "f.method": ("طريقة الدفع", "Payment method"), "f.reference": ("رقم الحوالة / المرجع", "Transfer number / reference"),
+    "f.note": ("ملاحظة", "Note"), "f.code": ("الرمز", "Code"), "f.video_url": ("رابط فيديو (يوتيوب/فيميو)", "Video link (YouTube/Vimeo)"),
+    "ws.pending": ("حُجز مقعدك مؤقتًا بانتظار الدفع.", "Your seat is held pending payment."),
+    "ws.pending_note": ("المقعد محجوز مؤقتًا حتى تؤكّد الإدارة الدفع.", "Seat held until the academy confirms payment."),
+    "consult.booked_pay": ("تم إرسال طلب الحجز. أكمل بيانات الدفع ليراجعها الفريق.", "Booking request sent. Complete the payment details so the team can review."),
+
+    # ---- certificates ---------------------------------------------------------------------------
+    "cert.title": ("شهادة إتمام", "Certificate of completion"), "cert.get": ("احصل على شهادتك", "Get your certificate"),
+    "cert.not_ready": ("أكمل جميع الدروس أولًا لتحصل على الشهادة.", "Complete all lessons first to get the certificate."),
+    "cert.print": ("طباعة / حفظ PDF", "Print / save as PDF"), "cert.awarded": ("تشهد أكاديمية أفقيا بأن", "Ufuqia Academy certifies that"),
+    "cert.completed": ("أتمّ/ت بنجاح دورة", "has successfully completed the course"),
+    "cert.verify_at": ("للتحقق من صحتها:", "Verify authenticity at:"),
+    "cert.verify_title": ("التحقق من شهادة", "Certificate verification"),
+    "cert.valid": ("شهادة صالحة صادرة عن المنصة.", "A valid certificate issued by this platform."),
+    "cert.invalid": ("لم نجد شهادة بهذا الرمز.", "No certificate was found for this code."),
+    "cert.code": ("رمز الشهادة", "Certificate code"), "cert.holder": ("الاسم", "Holder"),
+    "cert.sample_note": ("نموذج تجريبي لدورة خيالية — ليست شهادة معتمدة.", "Demo certificate for a fictional course — not an accredited credential."),
+
+    # ---- admin additions ---------------------------------------------------------------------------
+    "admin.nav.payments": ("المدفوعات", "Payments"), "admin.nav.outbox": ("صندوق البريد", "E-mail outbox"),
+    "admin.k.payments": ("مدفوعات بانتظار المراجعة", "Payments to review"),
+    "admin.payments_note": ("لا تُعالَج أي معاملات إلكترونية: يدفع الطالب خارج المنصة ويدخل المرجع، وأنتم تؤكّدون بعد التحقق من حسابكم.",
+                            "No online transactions are processed: students pay outside the platform and enter a reference; you confirm after checking your own account."),
+    "admin.confirm_payment": ("تأكيد أنك استلمت هذه الدفعة؟ سيُفعَّل الطلب.", "Confirm you received this payment? The request will be activated."),
+    "admin.confirm_reject": ("رفض هذه الدفعة؟", "Reject this payment?"),
+    "admin.err.payment_final": ("تم البت في هذه الدفعة مسبقًا.", "This payment has already been decided."),
+    "admin.mail_on": ("إرسال البريد مفعّل (SMTP).", "E-mail sending is enabled (SMTP)."),
+    "admin.mail_off": ("إرسال البريد غير مهيّأ: الرسائل تُسجَّل هنا فقط. اضبط MAIL_SERVER و MAIL_FROM لإرسالها فعليًا.", "E-mail sending is not configured: messages are only recorded here. Set MAIL_SERVER and MAIL_FROM to really send them."),
+    "admin.outbox_note": ("للمالك فقط: قد تحتوي الرسائل على روابط أحادية الاستخدام.", "Owner only: messages may contain one-time links."),
+    "content.payment_instructions": ("تعليمات الدفع (بيانات الحساب)", "Payment instructions (account details)"),
+})
 
 
 def translate(key, lang, **kw):

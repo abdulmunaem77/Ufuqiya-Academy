@@ -23,7 +23,9 @@
         <li><span>{{ t('ws.seats') }}</span><b>{{ ws.seats_left }} / {{ ws.capacity }}</b></li>
       </ul>
       {% if reg %}
-        <p class="notice-box notice-box--ok">{{ t('ws.you_registered') }}</p>
+        {% if reg.status == 'pending' %}<p class="notice-box">{{ t('ws.pending_note') }}</p>
+          {% if pay %}<a class="btn btn--gold btn--block" href="{{ url_for('pay.view', pid=pay.id) }}">{{ t('pay.go') }}</a>{% endif %}
+        {% else %}<p class="notice-box notice-box--ok">{{ t('ws.you_registered') }}</p>{% endif %}
         {% if ws.is_upcoming %}<form method="post" action="{{ url_for('workshops.cancel', slug=ws.slug) }}" data-confirm="{{ t('ws.cancel_confirm') }}">{{ csrf() }}<button class="btn btn--ghost btn--block" type="submit">{{ t('ws.cancel') }}</button></form>{% endif %}
       {% elif not ws.is_upcoming %}
         <p class="notice-box">{{ t('ws.closed') }}</p>

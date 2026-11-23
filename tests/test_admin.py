@@ -7,7 +7,7 @@ from conftest import PASSWORD, login, make_user, post
 
 ADMIN_URLS = ["/admin/", "/admin/e/courses/", "/admin/e/workshops/", "/admin/e/services/", "/admin/e/instructors/",
               "/admin/e/categories/", "/admin/e/testimonials/", "/admin/bookings", "/admin/enrollments",
-              "/admin/students", "/admin/content", "/admin/messages", "/admin/users", "/admin/audit",
+              "/admin/students", "/admin/content", "/admin/messages", "/admin/users", "/admin/audit", "/admin/payments", "/admin/outbox",
               "/admin/e/courses/new", "/admin/users/new", "/admin/courses/1/lessons", "/admin/workshops/1/registrations"]
 
 

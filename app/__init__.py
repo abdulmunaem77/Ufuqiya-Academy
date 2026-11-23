@@ -21,7 +21,10 @@ def create_app(config_object=None):
     cfg.validate()
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(cfg)
-    os.makedirs(app.instance_path, exist_ok=True)
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError:  # read-only filesystem (serverless)
+        pass
 
     if not app.config.get("SECRET_KEY"):  # development only (validate() blocks production)
         app.config["SECRET_KEY"] = ephemeral_secret()
@@ -38,6 +41,9 @@ def create_app(config_object=None):
         app.config["ACADEMY_TZ"] = ZoneInfo("UTC")
         tzname = "UTC"
     app.config["ACADEMY_TZ_NAME"] = tzname
+    hosts = [h.strip() for h in os.environ.get("TRUSTED_HOSTS", "").split(",") if h.strip()]
+    if hosts and not app.config.get("TESTING"):
+        app.config["TRUSTED_HOSTS"] = hosts  # reject forged Host headers (reset-link poisoning)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -73,6 +79,14 @@ def _register_hooks(app):
                 and request.endpoint not in {"auth.change_password", "auth.logout", "static", "main.set_language"}):
             return redirect(url_for("auth.change_password"))
 
+    @app.before_request
+    def force_staff_2fa():
+        if (app.config.get("REQUIRE_STAFF_2FA") and current_user.is_authenticated and current_user.is_staff
+                and not current_user.totp_enabled
+                and request.endpoint not in {"auth.twofa_manage", "auth.logout", "auth.change_password",
+                                             "static", "main.set_language"}):
+            return redirect(url_for("auth.twofa_manage"))
+
     @app.after_request
     def security_headers(resp):
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -84,7 +98,7 @@ def _register_hooks(app):
             "Content-Security-Policy",
             "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
             "font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; "
-            "frame-ancestors 'none'")
+            "frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'")
         if app.config["IS_PRODUCTION"]:
             resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         # Authenticated / form pages must not be cached by shared caches.

@@ -16,6 +16,10 @@
   {% if config.SHOW_SAMPLE_NOTICE %}<div class="notice"><div class="wrap">{{ t('notice.sample') }}</div></div>{% endif %}
   {% endblock %}
   {% block header %}{% include 'partials/header.html' %}{% endblock %}
+  {% if current_user.is_authenticated and not current_user.email_verified and config.REQUIRE_EMAIL_VERIFICATION %}
+  <div class="notice notice--warn"><div class="wrap">{{ t('auth.verify_banner') }}
+    <form method="post" action="{{ url_for('auth.resend_verification') }}" class="inline">{% from 'partials/macros.html' import csrf with context %}{{ csrf() }}<button class="linkbtn" type="submit">{{ t('auth.resend') }}</button></form></div></div>
+  {% endif %}
   {% include 'partials/flash.html' %}
   <main id="main">{% block content %}{% endblock %}</main>
   {% block footer %}{% include 'partials/footer.html' %}{% endblock %}

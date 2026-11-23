@@ -2,7 +2,8 @@ from flask import Blueprint, render_template
 from flask_login import current_user, login_required
 
 from ..forms import EmptyForm
-from ..models import ConsultationBooking, Enrollment, WorkshopRegistration, Workshop, utcnow
+from ..models import (Certificate, ConsultationBooking, Enrollment, Payment, Workshop,
+                      WorkshopRegistration, utcnow)
 
 bp = Blueprint("student", __name__)
 
@@ -15,11 +16,14 @@ def dashboard():
                    .order_by(Enrollment.created_at.desc()).all())
     rows = [(e, e.progress()) for e in enrollments]
     regs = (WorkshopRegistration.query.join(Workshop).filter(
-        WorkshopRegistration.user_id == current_user.id, WorkshopRegistration.status == "registered")
+        WorkshopRegistration.user_id == current_user.id, WorkshopRegistration.status.in_(("registered", "pending")))
         .order_by(Workshop.starts_at).all())
     bookings = (ConsultationBooking.query.filter_by(user_id=current_user.id)
                 .order_by(ConsultationBooking.preferred_at.desc()).all())
     active = [r for r in rows if r[0].status == "active"]
     avg = round(sum(p[0] for _, p in active) / len(active)) if active else 0
+    pays = {(p.kind, p.target_id): p for p in Payment.query.filter_by(user_id=current_user.id).all()
+            if p.status != "cancelled"}
+    certs = {c.course_id for c in Certificate.query.filter_by(user_id=current_user.id).all()}
     return render_template("student/dashboard.html", rows=rows, regs=regs, bookings=bookings,
-                           avg=avg, now=utcnow(), form=EmptyForm())
+                           avg=avg, now=utcnow(), form=EmptyForm(), pays=pays, certs=certs)

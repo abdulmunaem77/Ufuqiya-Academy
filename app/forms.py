@@ -68,6 +68,39 @@ class PasswordChangeForm(_F):
     confirm = PasswordField("confirm", [REQ, EqualTo("password", message="val.password_match")])
 
 
+class ForgotForm(_F):
+    email = StringField("email", [REQ, EMAIL, length(254)], filters=[strip])
+
+
+class ResetForm(_F):
+    password = PasswordField("password", [REQ, length(128), strong_password(10)])
+    confirm = PasswordField("confirm", [REQ, EqualTo("password", message="val.password_match")])
+
+
+class TwoFAForm(_F):
+    code = StringField("code", [REQ, length(20)], filters=[strip], render_kw={"autocomplete": "one-time-code", "inputmode": "text"})
+
+
+class TwoFADisableForm(_F):
+    password = PasswordField("password", [REQ, length(128)])
+    code = StringField("code", [REQ, length(20)], filters=[strip])
+
+
+PAY_METHODS = ("bank_transfer", "cash", "wallet", "other")
+
+
+class PaymentSubmitForm(_F):
+    method = SelectField("method", choices=[(m, m) for m in PAY_METHODS])
+    reference = StringField("reference", [REQ, length(120, 3)], filters=[strip])
+    note = StringField("note", [Optional(), length(500)], filters=[strip])
+
+
+def video_url_check(form, field):
+    from .media import embed_url
+    if field.data and not embed_url(field.data):
+        raise ValidationError("val.video_url")
+
+
 TOPICS = ("general", "course", "workshop", "consultation", "corporate", "support")
 
 
@@ -149,6 +182,7 @@ class LessonForm(_F):
     title_en = StringField("title_en", [REQ, length(200)], filters=[strip])
     body_ar = TextAreaField("body_ar", [Optional(), length(8000)], filters=[strip])
     body_en = TextAreaField("body_en", [Optional(), length(8000)], filters=[strip])
+    video_url = StringField("video_url", [Optional(), length(300), video_url_check], filters=[strip])
     minutes = IntegerField("minutes", [REQN, NumberRange(1, 600, message="val.number")], default=10)
 
 
