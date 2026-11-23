@@ -1,0 +1,32 @@
+{% set ep = request.endpoint or '' %}
+<header class="site-header">
+  <div class="wrap site-header__bar">
+    <a class="brand" href="{{ url_for('main.home') }}" aria-label="{{ t('brand.name') }}">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="90" height="71">
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+      <span class="sr">{{ t('nav.menu') }}</span><i></i><i></i><i></i>
+    </button>
+    <nav id="site-nav" class="site-nav" aria-label="{{ t('nav.main') }}">
+      <ul>
+        <li><a href="{{ url_for('main.home') }}" {% if ep == 'main.home' %}aria-current="page"{% endif %}>{{ t('nav.home') }}</a></li>
+        <li><a href="{{ url_for('courses.index') }}" {% if ep.startswith('courses.') %}aria-current="page"{% endif %}>{{ t('nav.courses') }}</a></li>
+        <li><a href="{{ url_for('workshops.index') }}" {% if ep.startswith('workshops.') %}aria-current="page"{% endif %}>{{ t('nav.workshops') }}</a></li>
+        <li><a href="{{ url_for('consult.index') }}" {% if ep.startswith('consult.') %}aria-current="page"{% endif %}>{{ t('nav.consult') }}</a></li>
+        <li><a href="{{ url_for('main.about') }}" {% if ep == 'main.about' %}aria-current="page"{% endif %}>{{ t('nav.about') }}</a></li>
+        <li><a href="{{ url_for('main.contact') }}" {% if ep == 'main.contact' %}aria-current="page"{% endif %}>{{ t('nav.contact') }}</a></li>
+      </ul>
+      <div class="site-nav__tools">
+        {% set other = 'en' if lang == 'ar' else 'ar' %}
+        <a class="lang-switch" href="{{ url_for('main.set_language', code=other, next=request.full_path.rstrip('?')) }}" lang="{{ other }}" hreflang="{{ other }}">{{ 'English' if lang == 'ar' else 'العربية' }}</a>
+        {% if current_user.is_authenticated %}
+          {% if is_staff %}<a class="btn btn--sm btn--ghost" href="{{ url_for('admin.dashboard') }}">{{ t('nav.admin') }}</a>{% endif %}
+          <a class="btn btn--sm btn--navy" href="{{ url_for('student.dashboard') }}">{{ t('nav.dashboard') }}</a>
+        {% else %}
+          <a class="btn btn--sm btn--ghost" href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a>
+          <a class="btn btn--sm btn--emerald" href="{{ url_for('auth.register') }}">{{ t('nav.register') }}</a>
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+</header>

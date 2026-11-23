@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, workshop_card with context %}
+{% block title %}{{ t('nav.workshops') }}{% endblock %}
+{% block content %}
+{{ page_head(t('nav.workshops'), t('ws.sub')) }}
+<section class="section section--ivory"><div class="wrap">
+  <h2>{{ t('ws.upcoming') }}</h2>
+  <div class="grid grid--3">{% for w in upcoming %}{{ workshop_card(w) }}{% else %}<p class="empty">{{ t('ws.none') }}</p>{% endfor %}</div>
+  {% if past %}<h2 class="mt">{{ t('ws.past') }}</h2><div class="grid grid--3 is-past">{% for w in past %}{{ workshop_card(w) }}{% endfor %}</div>{% endif %}
+</div></section>
+{% endblock %}

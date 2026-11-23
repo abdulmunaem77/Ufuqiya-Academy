@@ -1,0 +1,9 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import field, csrf with context %}
+{% block title %}{{ t('admin.lessons') }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ t('admin.lessons') }}: {{ loc(course, 'title') }}</h1><a class="link-arrow" href="{{ url_for('admin.lessons', course_id=course.id) }}">{{ t('common.back') }}</a></header>
+<form class="form admin-form" method="post" novalidate>{{ csrf() }}
+  <div class="admin-form__grid">{% for f in form if f.name != 'csrf_token' %}{% if f.type == 'TextAreaField' %}<div class="admin-form__wide">{{ field(f, rows=6) }}</div>{% else %}{{ field(f) }}{% endif %}{% endfor %}</div>
+  <button class="btn btn--navy btn--lg" type="submit">{{ t('common.save') }}</button></form>
+{% endblock %}

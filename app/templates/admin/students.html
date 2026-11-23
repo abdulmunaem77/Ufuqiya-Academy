@@ -1,0 +1,12 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager with context %}
+{% block title %}{{ t('admin.nav.students') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.students') }}</h1>
+<form class="filters filters--inline" method="get"><input type="search" name="q" value="{{ q }}" maxlength="80" placeholder="{{ t('admin.search_students') }}" aria-label="{{ t('admin.search_students') }}"><button class="btn btn--sm btn--navy" type="submit">{{ t('search.go') }}</button></form>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('f.name') }}</th><th>{{ t('f.email') }}</th><th>{{ t('col.joined') }}</th><th>{{ t('col.enrolled') }}</th><th>{{ t('f.status') }}</th><th></th></tr></thead><tbody>
+{% for u in pagination.items %}<tr><td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.created_at|d }}</td><td>{{ u.enrollments|length }}</td><td><span class="badge {{ 'badge--active' if u.is_active_account else 'badge--cancelled' }}">{{ t('status.active') if u.is_active_account else t('status.disabled') }}</span></td>
+<td class="actions"><a class="btn btn--sm btn--ghost" href="{{ url_for('admin.student_detail', uid=u.id) }}">{{ t('common.view') }}</a></td></tr>
+{% else %}<tr><td colspan="6" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, 'admin.students', q=q) }}
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ t('admin.nav.dashboard') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.dashboard') }}</h1>
+<div class="kpis kpis--admin">
+  <div class="kpi"><b>{{ stats.students }}</b><span>{{ t('admin.k.students') }}</span><small>+{{ stats.new_students_30d }} / 30d</small></div>
+  <div class="kpi"><b>{{ stats.courses }}</b><span>{{ t('admin.k.courses') }}</span></div>
+  <div class="kpi"><b>{{ stats.enrollments }}</b><span>{{ t('admin.k.enrollments') }}</span><small>{{ stats.pending_enrollments }} {{ t('status.pending') }}</small></div>
+  <div class="kpi"><b>{{ stats.workshops }}</b><span>{{ t('admin.k.workshops') }}</span><small>{{ stats.registrations }} {{ t('admin.k.regs') }}</small></div>
+  <div class="kpi"><b>{{ stats.pending_bookings }}</b><span>{{ t('admin.k.bookings') }}</span></div>
+  <div class="kpi"><b>{{ stats.new_messages }}</b><span>{{ t('admin.k.messages') }}</span></div>
+</div>
+<div class="admin__cols">
+  <section class="panel">
+    <h2>{{ t('admin.enroll_by_cat') }}</h2>
+    {% set mx = (by_cat|map(attribute=1)|max) or 1 %}
+    <ul class="bars">{% for c, n in by_cat %}<li><span>{{ loc(c, 'name') }}</span><progress max="{{ mx }}" value="{{ n }}">{{ n }}</progress><b>{{ n }}</b></li>{% endfor %}</ul>
+  </section>
+  {% if recent %}<section class="panel"><h2>{{ t('admin.recent_enroll') }}</h2>
+    <ul class="rows rows--compact">{% for e in recent %}<li><div><b>{{ e.user.name }}</b><small>{{ loc(e.course, 'title') }}</small></div><span class="badge badge--{{ e.status }}">{{ t('status.' ~ e.status) }}</span></li>{% endfor %}</ul></section>{% endif %}
+  {% if logs %}<section class="panel panel--wide"><h2>{{ t('admin.recent_activity') }}</h2>
+    <table class="table table--compact"><tbody>{% for l in logs %}<tr><td>{{ l.created_at|dt }}</td><td>{{ l.actor_email or '—' }}</td><td><code>{{ l.action }}</code></td><td>{{ l.target }}</td></tr>{% endfor %}</tbody></table></section>{% endif %}
+</div>
+{% endblock %}

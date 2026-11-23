@@ -1,0 +1,13 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager, status_form with context %}
+{% block title %}{{ t('admin.nav.enrollments') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.enrollments') }}</h1>
+<p class="fineprint">{{ t('admin.enroll_note') }}</p>
+<nav class="tabs"><a href="{{ url_for('admin.enrollments') }}" {% if not status %}aria-current="page"{% endif %}>{{ t('common.all') }}</a>{% for s in statuses %}<a href="{{ url_for('admin.enrollments', status=s) }}" {% if status == s %}aria-current="page"{% endif %}>{{ t('status.' ~ s) }}</a>{% endfor %}</nav>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('f.name') }}</th><th>{{ t('entity.courses') }}</th><th>{{ t('f.price') }}</th><th>{{ t('col.date') }}</th><th>{{ t('f.status') }}</th></tr></thead><tbody>
+{% for e in pagination.items %}<tr><td>{{ e.user.name }}<small class="block">{{ e.user.email }}</small></td><td>{{ loc(e.course, 'title') }}</td><td>{{ money(e.course.price) }}</td><td>{{ e.created_at|dt }}</td>
+<td>{{ status_form(url_for('admin.enrollment_status', oid=e.id), e.status, statuses) }}</td></tr>
+{% else %}<tr><td colspan="5" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, 'admin.enrollments', status=status) }}
+{% endblock %}

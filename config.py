@@ -50,6 +50,7 @@ class Config:
 
     MAX_CONTENT_LENGTH = 64 * 1024  # forms only; no uploads in this app
     PER_PAGE = 9
+    SHOW_SAMPLE_NOTICE = os.environ.get("SHOW_SAMPLE_NOTICE", "1").strip().lower() in {"1", "true", "yes", "on"}
 
     @classmethod
     def validate(cls):

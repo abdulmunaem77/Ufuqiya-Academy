@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, course_card, csrf, sample_badge, post_btn with context %}
+{% block title %}{{ loc(course, 'title') }}{% endblock %}
+{% block description %}{{ loc(course, 'summary') }}{% endblock %}
+{% block content %}
+{% call page_head(loc(course, 'title'), loc(course, 'summary'), crumbs=[(t('nav.courses'), url_for('courses.index')), (loc(course.category, 'name'), url_for('courses.index', category=course.category.slug)), (loc(course, 'title'), none)]) %}
+  <p class="page-head__badges">{{ sample_badge(course) }}{% if not course.is_published %}<span class="badge">{{ t('common.draft') }}</span>{% endif %}</p>
+{% endcall %}
+<section class="section section--ivory">
+  <div class="wrap detail">
+    <div class="detail__main">
+      <h2>{{ t('course.about') }}</h2>
+      <div class="prose">{{ loc(course, 'description')|paras }}</div>
+      <h2>{{ t('course.curriculum') }}</h2>
+      <ol class="curriculum">
+        {% for l in course.lessons %}<li><span>{{ loc(l, 'title') }}</span><small>{{ t('course.minutes', n=l.minutes) }}</small></li>{% else %}<li>{{ t('common.none_yet') }}</li>{% endfor %}
+      </ol>
+      <h2>{{ t('course.instructor') }}</h2>
+      <div class="person"><div class="person__avatar" aria-hidden="true">{{ loc(course.instructor, 'name')[:1] }}</div>
+        <div><b>{{ loc(course.instructor, 'name') }}</b> {{ sample_badge(course.instructor) }}<p>{{ loc(course.instructor, 'title') }}</p><p>{{ loc(course.instructor, 'bio') }}</p></div></div>
+    </div>
+    <aside class="buy">
+      <p class="buy__price{% if course.is_free %} buy__price--free{% endif %}">{{ money(course.price) }}</p>
+      <ul class="facts">
+        <li><span>{{ t('f.level') }}</span><b>{{ t('level.' ~ course.level) }}</b></li>
+        <li><span>{{ t('f.duration_hours') }}</span><b>{{ t('course.hours', n=course.duration_hours) }}</b></li>
+        <li><span>{{ t('course.lessons') }}</span><b>{{ course.lessons|length }}</b></li>
+        <li><span>{{ t('f.category') }}</span><b>{{ loc(course.category, 'name') }}</b></li>
+      </ul>
+      {% if enrollment and enrollment.status == 'active' %}
+        <a class="btn btn--emerald btn--block btn--lg" href="{{ url_for('courses.learn', slug=course.slug) }}">{{ t('course.continue') }}</a>
+      {% elif enrollment and enrollment.status == 'pending' %}
+        <p class="notice-box">{{ t('course.pending') }}</p>
+        <a class="btn btn--ghost btn--block" href="{{ url_for('main.contact', topic='course') }}">{{ t('course.contact_us') }}</a>
+      {% elif current_user.is_authenticated %}
+        <form method="post" action="{{ url_for('courses.enroll', slug=course.slug) }}">{{ csrf() }}
+          <button class="btn btn--gold btn--block btn--lg" type="submit" {% if not course.is_published %}disabled{% endif %}>{{ t('course.enroll_free') if course.is_free else t('course.enroll') }}</button></form>
+        {% if not course.is_free %}<p class="fineprint">{{ t('course.pay_note') }}</p>{% endif %}
+      {% else %}
+        <a class="btn btn--gold btn--block btn--lg" href="{{ url_for('auth.login', next=request.path) }}">{{ t('course.login_to_enroll') }}</a>
+      {% endif %}
+      <a class="link-arrow" href="{{ url_for('main.contact', topic='course') }}">{{ t('course.ask') }}</a>
+    </aside>
+  </div>
+</section>
+{% if related %}
+<section class="section section--sand section--tight"><div class="wrap">
+  <h2>{{ t('course.related') }}</h2><div class="grid grid--3">{% for c in related %}{{ course_card(c) }}{% endfor %}</div></div></section>
+{% endif %}
+{% endblock %}

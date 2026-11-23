@@ -1,0 +1,35 @@
+<footer class="site-footer">
+  <div class="wrap footer__grid">
+    <div class="footer__about">
+      <span class="footer__logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="110" height="87" loading="lazy"></span>
+      <p>{{ site('footer_blurb') }}</p>
+    </div>
+    <div>
+      <h3>{{ t('footer.explore') }}</h3>
+      <ul>
+        <li><a href="{{ url_for('courses.index') }}">{{ t('nav.courses') }}</a></li>
+        <li><a href="{{ url_for('workshops.index') }}">{{ t('nav.workshops') }}</a></li>
+        <li><a href="{{ url_for('consult.index') }}">{{ t('nav.consult') }}</a></li>
+        <li><a href="{{ url_for('main.about') }}">{{ t('nav.about') }}</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>{{ t('footer.account') }}</h3>
+      <ul>
+        {% if current_user.is_authenticated %}
+        <li><a href="{{ url_for('student.dashboard') }}">{{ t('nav.dashboard') }}</a></li>
+        <li><a href="{{ url_for('auth.account') }}">{{ t('nav.account') }}</a></li>
+        {% else %}
+        <li><a href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a></li>
+        <li><a href="{{ url_for('auth.register') }}">{{ t('nav.register') }}</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('main.contact') }}">{{ t('nav.contact') }}</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>{{ t('footer.contact') }}</h3>
+      <p class="footer__contact">{{ site('contact_email') }}<br>{{ site('contact_hours') }}</p>
+    </div>
+  </div>
+  <div class="footer__legal"><div class="wrap">© {{ now_year }} {{ t('brand.name') }} · {{ t('footer.rights') }}</div></div>
+</footer>

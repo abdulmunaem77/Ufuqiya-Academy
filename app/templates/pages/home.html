@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import course_card, workshop_card, cat_icon, sample_badge with context %}
+{% block content %}
+<section class="hero">
+  <svg class="hero__horizon" viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 210 Q600 90 1200 210" fill="none" stroke="currentColor" stroke-width="2"/><path d="M0 190 Q600 60 1200 190" fill="none" stroke="currentColor" stroke-width="1" opacity=".45"/></svg>
+  <div class="wrap hero__inner">
+    <div class="hero__copy">
+      <p class="eyebrow">{{ t('hero.eyebrow') }}</p>
+      <h1>{{ site('hero_title') }}</h1>
+      <p class="hero__lead">{{ site('hero_lead') }}</p>
+      <div class="hero__cta">
+        <a class="btn btn--gold btn--lg" href="{{ url_for('courses.index') }}">{{ t('hero.cta_courses') }}</a>
+        <a class="btn btn--outline btn--lg" href="{{ url_for('consult.index') }}">{{ t('hero.cta_consult') }}</a>
+      </div>
+    </div>
+    <form class="hero__search" action="{{ url_for('courses.index') }}" method="get" role="search">
+      <label for="hs">{{ t('search.label') }}</label>
+      <div class="hero__search-row">
+        <input id="hs" name="q" type="search" maxlength="80" placeholder="{{ t('search.placeholder') }}">
+        <button class="btn btn--emerald" type="submit">{{ t('search.go') }}</button>
+      </div>
+      <ul class="chips">
+        {% for c in categories %}<li><a href="{{ url_for('courses.index', category=c.slug) }}">{{ loc(c, 'name') }}</a></li>{% endfor %}
+      </ul>
+    </form>
+  </div>
+  <div class="wrap stats">
+    <div><b>{{ stats.courses }}</b><span>{{ t('stats.courses') }}</span></div>
+    <div><b>{{ stats.workshops }}</b><span>{{ t('stats.workshops') }}</span></div>
+    <div><b>{{ stats.services }}</b><span>{{ t('stats.services') }}</span></div>
+    <div><b>{{ stats.categories }}</b><span>{{ t('stats.categories') }}</span></div>
+  </div>
+</section>
+
+<section class="section section--ivory">
+  <div class="wrap">
+    <header class="section__head"><p class="eyebrow eyebrow--emerald">{{ t('home.cats_eyebrow') }}</p><h2>{{ t('home.cats_title') }}</h2></header>
+    <div class="grid grid--4">
+      {% for c in categories %}
+      <a class="cat-tile" href="{{ url_for('courses.index', category=c.slug) }}">
+        {{ cat_icon(c.slug) }}<h3>{{ loc(c, 'name') }}</h3><p>{{ loc(c, 'description') }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section--ivory section--tight">
+  <div class="wrap">
+    <header class="section__head section__head--row">
+      <div><p class="eyebrow eyebrow--emerald">{{ t('home.featured_eyebrow') }}</p><h2>{{ t('home.featured_title') }}</h2></div>
+      <a class="link-arrow" href="{{ url_for('courses.index') }}">{{ t('common.view_all') }}</a>
+    </header>
+    <div class="grid grid--3">{% for c in featured %}{{ course_card(c) }}{% else %}<p class="empty">{{ t('common.none_yet') }}</p>{% endfor %}</div>
+  </div>
+</section>
+
+<section class="section section--navy">
+  <div class="wrap">
+    <header class="section__head section__head--row">
+      <div><p class="eyebrow">{{ t('home.ws_eyebrow') }}</p><h2>{{ t('home.ws_title') }}</h2></div>
+      <a class="link-arrow link-arrow--light" href="{{ url_for('workshops.index') }}">{{ t('common.view_all') }}</a>
+    </header>
+    <div class="grid grid--3 on-navy">{% for w in workshops %}{{ workshop_card(w) }}{% else %}<p class="empty empty--light">{{ t('ws.none') }}</p>{% endfor %}</div>
+  </div>
+</section>
+
+<section class="section section--navy section--deep">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">{{ t('home.consult_eyebrow') }}</p>
+      <h2>{{ t('home.consult_title') }}</h2>
+      <p class="lead">{{ t('home.consult_text') }}</p>
+      <a class="btn btn--gold" href="{{ url_for('consult.index') }}">{{ t('home.consult_cta') }}</a>
+    </div>
+    <ol class="steps">
+      <li><b>1</b><span>{{ t('home.step1') }}</span></li>
+      <li><b>2</b><span>{{ t('home.step2') }}</span></li>
+      <li><b>3</b><span>{{ t('home.step3') }}</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section section--ivory">
+  <div class="wrap">
+    <header class="section__head"><p class="eyebrow eyebrow--emerald">{{ t('home.testi_eyebrow') }}</p><h2>{{ t('home.testi_title') }}</h2></header>
+    <div class="grid grid--3">
+      {% for x in testimonials %}
+      <figure class="quote">
+        <blockquote>{{ loc(x, 'text') }}</blockquote>
+        <figcaption><b>{{ loc(x, 'author') }}</b><span>{{ loc(x, 'role') }}</span>{{ sample_badge(x) }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% if testimonials and testimonials[0].is_sample %}<p class="fineprint">{{ t('home.testi_note') }}</p>{% endif %}
+  </div>
+</section>
+
+<section class="section section--navy section--cta">
+  <div class="wrap cta">
+    <h2>{{ t('home.cta_title') }}</h2>
+    <p>{{ t('home.cta_text') }}</p>
+    <a class="btn btn--gold btn--lg" href="{{ url_for('auth.register') }}">{{ t('nav.register') }}</a>
+  </div>
+</section>
+{% endblock %}

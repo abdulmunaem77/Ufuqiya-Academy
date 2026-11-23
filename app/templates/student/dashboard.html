@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, post_btn with context %}
+{% block title %}{{ t('nav.dashboard') }}{% endblock %}
+{% block content %}
+{% call page_head(t('dash.hello', name=current_user.name)) %}<p class="page-head__sub">{{ t('dash.sub') }}</p>{% endcall %}
+<section class="section section--ivory"><div class="wrap">
+  <div class="kpis">
+    <div class="kpi"><b>{{ rows|length }}</b><span>{{ t('dash.k_courses') }}</span></div>
+    <div class="kpi"><b>{{ avg }}%</b><span>{{ t('dash.k_progress') }}</span></div>
+    <div class="kpi"><b>{{ regs|length }}</b><span>{{ t('dash.k_workshops') }}</span></div>
+    <div class="kpi"><b>{{ bookings|selectattr('status','in',['pending','confirmed'])|list|length }}</b><span>{{ t('dash.k_bookings') }}</span></div>
+  </div>
+
+  <h2>{{ t('dash.my_courses') }}</h2>
+  {% if rows %}
+  <div class="grid grid--2">
+    {% for e, p in rows %}
+    <article class="card card--progress">
+      <div class="card__body">
+        <p class="card__meta"><span>{{ loc(e.course.category, 'name') }}</span><span class="badge badge--{{ e.status }}">{{ t('status.' ~ e.status) }}</span></p>
+        <h3 class="card__title"><a href="{{ url_for('courses.detail', slug=e.course.slug) }}">{{ loc(e.course, 'title') }}</a></h3>
+        {% if e.status == 'active' %}
+        <p class="learn__pct"><progress max="100" value="{{ p[0] }}">{{ p[0] }}%</progress> <b>{{ p[0] }}%</b></p>
+        <p class="fineprint">{{ t('dash.lessons_done', done=p[1], total=p[2]) }}</p>
+        {% else %}<p class="fineprint">{{ t('course.pending') }}</p>{% endif %}
+      </div>
+      <div class="card__foot">
+        {% if e.status == 'active' %}<a class="btn btn--emerald btn--sm" href="{{ url_for('courses.learn', slug=e.course.slug) }}">{{ t('course.continue') }}</a>{% else %}<span></span>{% endif %}
+        {{ post_btn(url_for('courses.cancel', slug=e.course.slug), t('common.cancel'), 'btn btn--sm btn--ghost', 'dash.cancel_confirm') }}
+      </div>
+    </article>{% endfor %}
+  </div>
+  {% else %}<p class="empty">{{ t('dash.no_courses') }} <a href="{{ url_for('courses.index') }}">{{ t('nav.courses') }}</a></p>{% endif %}
+
+  <h2 class="mt">{{ t('dash.my_workshops') }}</h2>
+  {% if regs %}
+  <ul class="rows">{% for r in regs %}<li><div><a href="{{ url_for('workshops.detail', slug=r.workshop.slug) }}"><b>{{ loc(r.workshop, 'title') }}</b></a><small>{{ r.workshop.starts_at|dt }} ({{ tzname }})</small></div>
+    <span class="badge {{ 'badge--active' if r.workshop.starts_at > now else '' }}">{{ t('ws.upcoming_one') if r.workshop.starts_at > now else t('ws.ended') }}</span></li>{% endfor %}</ul>
+  {% else %}<p class="empty">{{ t('dash.no_workshops') }} <a href="{{ url_for('workshops.index') }}">{{ t('nav.workshops') }}</a></p>{% endif %}
+
+  <h2 class="mt">{{ t('dash.my_bookings') }}</h2>
+  {% if bookings %}
+  <ul class="rows">{% for b in bookings %}<li><div><b>{{ loc(b.service, 'title') }}</b><small>{{ b.preferred_at|dt }} ({{ tzname }})</small></div>
+    <div class="rows__end"><span class="badge badge--{{ b.status }}">{{ t('status.' ~ b.status) }}</span>
+    {% if b.status in ('pending','confirmed') %}{{ post_btn(url_for('consult.cancel', booking_id=b.id), t('common.cancel'), 'btn btn--sm btn--ghost', 'dash.cancel_confirm') }}{% endif %}</div></li>{% endfor %}</ul>
+  {% else %}<p class="empty">{{ t('dash.no_bookings') }} <a href="{{ url_for('consult.index') }}">{{ t('nav.consult') }}</a></p>{% endif %}
+</div></section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import csrf with context %}
+{% block title %}{{ loc(course, 'title') }}{% endblock %}
+{% block content %}
+<section class="learn">
+  <div class="wrap learn__grid">
+    <aside class="learn__side">
+      <a class="link-arrow" href="{{ url_for('student.dashboard') }}">{{ t('nav.dashboard') }}</a>
+      <h1>{{ loc(course, 'title') }}</h1>
+      <p class="learn__pct"><progress max="100" value="{{ progress[0] }}">{{ progress[0] }}%</progress> <b>{{ progress[0] }}%</b> <span>{{ t('dash.lessons_done', done=progress[1], total=progress[2]) }}</span></p>
+      <ol class="lesson-list">
+        {% for l in course.lessons %}
+        <li class="{% if current and current.id == l.id %}is-current{% endif %}{% if l.id in done %} is-done{% endif %}">
+          <a href="{{ url_for('courses.learn', slug=course.slug, lesson=l.id) }}"><i aria-hidden="true">{{ '✓' if l.id in done else loop.index }}</i><span>{{ loc(l, 'title') }}</span></a>
+        </li>{% endfor %}
+      </ol>
+    </aside>
+    <article class="learn__main">
+      {% if current %}
+      <p class="eyebrow eyebrow--emerald">{{ t('course.lesson_n', n=current.position) }} · {{ t('course.minutes', n=current.minutes) }}</p>
+      <h2>{{ loc(current, 'title') }}</h2>
+      <div class="prose">{{ loc(current, 'body')|paras }}</div>
+      <form method="post" action="{{ url_for('courses.toggle_lesson', slug=course.slug, lesson_id=current.id) }}">{{ csrf() }}
+        <button class="btn {{ 'btn--ghost' if current.id in done else 'btn--emerald' }}" type="submit">{{ t('course.mark_undone') if current.id in done else t('course.mark_done') }}</button>
+      </form>
+      {% else %}<p class="empty">{{ t('common.none_yet') }}</p>{% endif %}
+    </article>
+  </div>
+</section>
+{% endblock %}

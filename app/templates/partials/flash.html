@@ -1,0 +1,9 @@
+{% with msgs = get_flashed_messages(with_categories=true) %}
+{% if msgs %}
+<div class="flashes wrap" role="status">
+  {% for cat, msg in msgs %}
+  <div class="flash flash--{{ cat }}"><span>{{ t(msg) }}</span><button type="button" class="flash__x" data-dismiss aria-label="{{ t('common.close') }}">×</button></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

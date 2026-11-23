@@ -1,0 +1,101 @@
+{% macro err(field) %}{% for e in field.errors %}<p class="err" role="alert">{{ t(e) if e.startswith('val.') else t('val.invalid') }}</p>{% endfor %}{% endmacro %}
+
+{% macro field(f, prefix='', hint='', label=true) %}
+<div class="field{% if f.errors %} field--bad{% endif %}">
+  {% if f.type == 'BooleanField' %}
+    <label class="check">{{ f(**kwargs) }} <span>{{ t('f.' ~ f.name) }}</span></label>
+  {% else %}
+    {% if label %}<label for="{{ f.id }}">{{ t('f.' ~ f.name) }}{% if f.flags.required %} <b class="req" aria-hidden="true">*</b>{% endif %}</label>{% endif %}
+    {% if f.type == 'SelectField' %}
+      <select id="{{ f.id }}" name="{{ f.name }}">
+        {% for value, text in f.choices %}<option value="{{ value }}" {% if f.data == value or f.data|string == value|string %}selected{% endif %}>{{ t(prefix ~ value) if prefix else text }}</option>{% endfor %}
+      </select>
+    {% else %}{{ f(**kwargs) }}{% endif %}
+  {% endif %}
+  {% if hint %}<p class="hint">{{ t(hint) }}</p>{% endif %}
+  {{ err(f) }}
+</div>
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro sample_badge(obj) %}{% if obj.is_sample %}<span class="badge badge--sample">{{ t('common.sample') }}</span>{% endif %}{% endmacro %}
+
+{% macro cat_icon(slug) %}
+<svg class="cat-icon" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+{% if slug == 'artificial-intelligence' %}<circle cx="24" cy="24" r="5"/><circle cx="8" cy="10" r="3"/><circle cx="40" cy="10" r="3"/><circle cx="8" cy="38" r="3"/><circle cx="40" cy="38" r="3"/><path d="M10.5 12l10 8M37.5 12l-10 8M10.5 36l10-8M37.5 36l-10-8"/>
+{% elif slug == 'technology' %}<rect x="5" y="9" width="38" height="26" rx="3"/><path d="M17 41h14M24 35v6M18 18l-5 5 5 5M30 18l5 5-5 5"/>
+{% elif slug == 'digital-marketing' %}<path d="M6 40V26M16 40V16M26 40V22M36 40V8"/><path d="M5 12l12 7 10-9 14 6"/>
+{% else %}<circle cx="24" cy="24" r="17"/><path d="M30.5 17.5l-4 9-9 4 4-9z"/>{% endif %}
+</svg>
+{% endmacro %}
+
+{% macro course_card(c) %}
+<article class="card card--course">
+  <a class="card__media card__media--{{ c.category.slug }}" href="{{ url_for('courses.detail', slug=c.slug) }}" tabindex="-1" aria-hidden="true">
+    {{ cat_icon(c.category.slug) }}
+    <span class="card__level">{{ t('level.' ~ c.level) }}</span>
+  </a>
+  <div class="card__body">
+    <p class="card__meta"><span>{{ loc(c.category, 'name') }}</span>{{ sample_badge(c) }}</p>
+    <h3 class="card__title"><a href="{{ url_for('courses.detail', slug=c.slug) }}">{{ loc(c, 'title') }}</a></h3>
+    <p class="card__text">{{ loc(c, 'summary') }}</p>
+    <p class="card__by">{{ loc(c.instructor, 'name') }}</p>
+  </div>
+  <div class="card__foot">
+    <span class="price{% if c.is_free %} price--free{% endif %}">{{ money(c.price) }}</span>
+    <span class="card__dur">{{ t('course.hours', n=c.duration_hours) }}</span>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro workshop_card(w) %}
+<article class="card card--workshop">
+  <div class="date-chip" aria-hidden="true">
+    <b>{{ (w.starts_at|dt(false)).split(' ')[0] }}</b><span>{{ (w.starts_at|dt(false)).split(' ')[1] }}</span>
+  </div>
+  <div class="card__body">
+    <p class="card__meta"><span>{{ w.starts_at|dt }} <small>({{ tzname }})</small></span>{{ sample_badge(w) }}</p>
+    <h3 class="card__title"><a href="{{ url_for('workshops.detail', slug=w.slug) }}">{{ loc(w, 'title') }}</a></h3>
+    <p class="card__text">{{ loc(w, 'summary') }}</p>
+  </div>
+  <div class="card__foot">
+    <span class="price{% if not w.price %} price--free{% endif %}">{{ money(w.price) }}</span>
+    <span class="card__dur">{% if w.is_upcoming %}{{ t('ws.seats_left', n=w.seats_left) }}{% else %}{{ t('ws.ended') }}{% endif %}</span>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro page_head(title, sub='', crumbs=none) %}
+<section class="page-head">
+  <div class="wrap">
+    {% if crumbs %}<nav class="crumbs" aria-label="breadcrumb">{% for label, href in crumbs %}{% if href %}<a href="{{ href }}">{{ label }}</a><span aria-hidden="true">/</span>{% else %}<span>{{ label }}</span>{% endif %}{% endfor %}</nav>{% endif %}
+    <h1>{{ title }}</h1>
+    {% if sub %}<p class="page-head__sub">{{ sub }}</p>{% endif %}
+    {{ caller() if caller else '' }}
+  </div>
+</section>
+{% endmacro %}
+
+{% macro pager(pagination, endpoint) %}
+{% if pagination.pages > 1 %}
+<nav class="pager" aria-label="pagination">
+  {% if pagination.has_prev %}<a class="pager__a" rel="prev" href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}">‹ {{ t('common.prev') }}</a>{% endif %}
+  <span class="pager__cur">{{ pagination.page }} / {{ pagination.pages }}</span>
+  {% if pagination.has_next %}<a class="pager__a" rel="next" href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}">{{ t('common.next') }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro post_btn(action, label, cls='btn btn--sm btn--ghost', confirm='') %}
+<form method="post" action="{{ action }}" class="inline" {% if confirm %}data-confirm="{{ t(confirm) }}"{% endif %}>{{ csrf() }}<button class="{{ cls }}" type="submit">{{ label }}</button></form>
+{% endmacro %}
+
+{% macro status_form(action, current, options, prefix='status.') %}
+<form method="post" action="{{ action }}" class="inline status-form">{{ csrf() }}
+  <select name="status" aria-label="{{ t('f.status') }}" data-autosubmit>
+    {% for o in options %}<option value="{{ o }}" {% if o == current %}selected{% endif %}>{{ t(prefix ~ o) }}</option>{% endfor %}
+  </select>
+  <noscript><button class="btn btn--sm" type="submit">{{ t('common.save') }}</button></noscript>
+</form>
+{% endmacro %}

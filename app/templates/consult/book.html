@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, field, csrf, sample_badge with context %}
+{% block title %}{{ t('consult.book') }}{% endblock %}
+{% block content %}
+{{ page_head(loc(service, 'title'), loc(service, 'summary'), crumbs=[(t('nav.consult'), url_for('consult.index')), (t('consult.book'), none)]) }}
+<section class="section section--ivory"><div class="wrap split split--form">
+  <form class="form card-form" method="post" novalidate>
+    {{ csrf() }}
+    <h2>{{ t('consult.pick') }}</h2>
+    {{ field(form.when, hint='consult.when_hint') }}
+    {{ field(form.notes, rows=5, maxlength=1000) }}
+    <button class="btn btn--navy btn--lg" type="submit">{{ t('consult.request') }}</button>
+  </form>
+  <aside class="info-card">
+    <h2>{{ t('consult.summary') }}</h2>
+    <dl><dt>{{ t('f.instructor_id') }}</dt><dd>{{ loc(service.instructor, 'name') }} {{ sample_badge(service.instructor) }}</dd>
+      <dt>{{ t('f.duration_minutes') }}</dt><dd>{{ t('consult.minutes', n=service.duration_minutes) }}</dd>
+      <dt>{{ t('f.price') }}</dt><dd>{{ money(service.price) }}</dd>
+      <dt>{{ t('ws.timezone') }}</dt><dd>{{ tzname }}</dd></dl>
+    <p class="fineprint">{{ t('consult.pending_note') }}</p>
+  </aside>
+</div></section>
+{% endblock %}

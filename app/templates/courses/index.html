@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, course_card, pager with context %}
+{% block title %}{{ t('nav.courses') }}{% endblock %}
+{% block content %}
+{{ page_head(t('nav.courses'), t('courses.sub')) }}
+<section class="section section--ivory">
+  <div class="wrap">
+    <form class="filters" method="get" action="{{ url_for('courses.index') }}" role="search">
+      <div class="filters__q"><label class="sr" for="q">{{ t('search.label') }}</label>
+        <input id="q" type="search" name="q" value="{{ q }}" maxlength="80" placeholder="{{ t('search.placeholder') }}"></div>
+      <div><label class="sr" for="fc">{{ t('f.category') }}</label>
+        <select id="fc" name="category" data-autosubmit><option value="">{{ t('filter.all_categories') }}</option>
+          {% for c in categories %}<option value="{{ c.slug }}" {% if c.slug == cat %}selected{% endif %}>{{ loc(c, 'name') }}</option>{% endfor %}</select></div>
+      <div><label class="sr" for="fl">{{ t('f.level') }}</label>
+        <select id="fl" name="level" data-autosubmit><option value="">{{ t('filter.all_levels') }}</option>
+          {% for l in levels %}<option value="{{ l }}" {% if l == level %}selected{% endif %}>{{ t('level.' ~ l) }}</option>{% endfor %}</select></div>
+      <div><label class="sr" for="fp">{{ t('f.price') }}</label>
+        <select id="fp" name="price" data-autosubmit><option value="">{{ t('filter.any_price') }}</option>
+          <option value="free" {% if price == 'free' %}selected{% endif %}>{{ t('common.free') }}</option>
+          <option value="paid" {% if price == 'paid' %}selected{% endif %}>{{ t('filter.paid') }}</option></select></div>
+      <div><label class="sr" for="fs">{{ t('filter.sort') }}</label>
+        <select id="fs" name="sort" data-autosubmit>
+          <option value="new" {% if sort == 'new' %}selected{% endif %}>{{ t('sort.new') }}</option>
+          <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>{{ t('sort.price_asc') }}</option>
+          <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>{{ t('sort.price_desc') }}</option></select></div>
+      <button class="btn btn--navy" type="submit">{{ t('search.go') }}</button>
+      {% if q or cat or level or price %}<a class="link-arrow" href="{{ url_for('courses.index') }}">{{ t('filter.clear') }}</a>{% endif %}
+    </form>
+    <p class="result-count" aria-live="polite">{{ t('courses.count', n=pagination.total) }}</p>
+    <div class="grid grid--3">{% for c in pagination.items %}{{ course_card(c) }}{% else %}<p class="empty">{{ t('courses.none') }}</p>{% endfor %}</div>
+    {{ pager(pagination, 'courses.index', q=q, category=cat, level=level, price=price, sort=sort) }}
+  </div>
+</section>
+{% endblock %}

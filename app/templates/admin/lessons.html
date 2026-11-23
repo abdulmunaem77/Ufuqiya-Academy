@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import field, csrf, post_btn with context %}
+{% block title %}{{ t('admin.lessons') }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ t('admin.lessons') }}: {{ loc(course, 'title') }}</h1><a class="link-arrow" href="{{ url_for('admin.entity_list', entity='courses') }}">{{ t('common.back') }}</a></header>
+<div class="table-wrap"><table class="table"><thead><tr><th>#</th><th>{{ t('col.title') }}</th><th>{{ t('f.minutes') }}</th><th></th></tr></thead><tbody>
+{% for l in course.lessons %}<tr><td>{{ l.position }}</td><td>{{ loc(l, 'title') }}</td><td>{{ l.minutes }}</td><td class="actions">
+  <a class="btn btn--sm btn--ghost" href="{{ url_for('admin.lesson_edit', lesson_id=l.id) }}">{{ t('common.edit') }}</a>
+  {{ post_btn(url_for('admin.lesson_delete', lesson_id=l.id), t('common.delete'), 'btn btn--sm btn--danger', 'admin.confirm_delete') }}</td></tr>
+{% else %}<tr><td colspan="4" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}
+</tbody></table></div>
+<section class="panel"><h2>{{ t('admin.add_lesson') }}</h2>
+<form class="form admin-form" method="post" novalidate>{{ csrf() }}
+  <div class="admin-form__grid">{% for f in form if f.name != 'csrf_token' %}{% if f.type == 'TextAreaField' %}<div class="admin-form__wide">{{ field(f, rows=4) }}</div>{% else %}{{ field(f) }}{% endif %}{% endfor %}</div>
+  <button class="btn btn--navy" type="submit">{{ t('common.save') }}</button></form></section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager, post_btn, csrf with context %}
+{% block title %}{{ t('admin.nav.users') }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ t('admin.nav.users') }}</h1><a class="btn btn--navy" href="{{ url_for('admin.user_new') }}">+ {{ t('admin.new_staff') }}</a></header>
+<p class="fineprint">{{ t('admin.roles_note') }}</p>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('f.name') }}</th><th>{{ t('f.email') }}</th><th>{{ t('f.role') }}</th><th>{{ t('f.status') }}</th><th></th></tr></thead><tbody>
+{% for u in pagination.items %}<tr><td>{{ u.name }}</td><td>{{ u.email }}</td>
+<td>{% if u.role == 'owner' or u.id == current_user.id %}<span class="badge badge--active">{{ t('role.' ~ u.role) }}</span>{% else %}
+  <form method="post" action="{{ url_for('admin.user_role', uid=u.id) }}" class="inline status-form">{{ csrf() }}<select name="role" aria-label="{{ t('f.role') }}" data-autosubmit>{% for r in ['admin','editor','support','student'] %}<option value="{{ r }}" {% if r == u.role %}selected{% endif %}>{{ t('role.' ~ r) }}</option>{% endfor %}</select></form>{% endif %}</td>
+<td><span class="badge {{ 'badge--active' if u.is_active_account else 'badge--cancelled' }}">{{ t('status.active') if u.is_active_account else t('status.disabled') }}</span></td>
+<td class="actions">{% if u.role != 'owner' and u.id != current_user.id %}
+ {{ post_btn(url_for('admin.user_toggle', uid=u.id), t('admin.deactivate') if u.is_active_account else t('admin.activate'), 'btn btn--sm btn--ghost', 'admin.confirm_toggle') }}
+ {{ post_btn(url_for('admin.user_reset', uid=u.id), t('admin.reset_password'), 'btn btn--sm btn--ghost', 'admin.confirm_reset') }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, 'admin.users') }}
+{% endblock %}

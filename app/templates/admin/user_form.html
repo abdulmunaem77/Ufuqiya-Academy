@@ -1,0 +1,9 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import field, csrf with context %}
+{% block title %}{{ t('admin.new_staff') }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ t('admin.new_staff') }}</h1><a class="link-arrow" href="{{ url_for('admin.users') }}">{{ t('common.back') }}</a></header>
+<form class="form admin-form" method="post" novalidate>{{ csrf() }}
+  <div class="admin-form__grid">{{ field(form.name) }}{{ field(form.email, type='email', autocomplete='off') }}{{ field(form.role, prefix='role.') }}{{ field(form.password, hint='admin.staff_pw_hint', autocomplete='new-password') }}</div>
+  <button class="btn btn--navy btn--lg" type="submit">{{ t('common.save') }}</button></form>
+{% endblock %}

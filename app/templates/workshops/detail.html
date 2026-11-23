@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, csrf, sample_badge with context %}
+{% block title %}{{ loc(ws, 'title') }}{% endblock %}
+{% block description %}{{ loc(ws, 'summary') }}{% endblock %}
+{% block content %}
+{% call page_head(loc(ws, 'title'), loc(ws, 'summary'), crumbs=[(t('nav.workshops'), url_for('workshops.index')), (loc(ws, 'title'), none)]) %}<p class="page-head__badges">{{ sample_badge(ws) }}</p>{% endcall %}
+<section class="section section--ivory">
+  <div class="wrap detail">
+    <div class="detail__main">
+      <h2>{{ t('course.about') }}</h2>
+      <div class="prose">{{ loc(ws, 'description')|paras }}</div>
+      <h2>{{ t('ws.host') }}</h2>
+      <div class="person"><div class="person__avatar" aria-hidden="true">{{ loc(ws.instructor, 'name')[:1] }}</div>
+        <div><b>{{ loc(ws.instructor, 'name') }}</b> {{ sample_badge(ws.instructor) }}<p>{{ loc(ws.instructor, 'title') }}</p></div></div>
+    </div>
+    <aside class="buy">
+      <p class="buy__price{% if not ws.price %} buy__price--free{% endif %}">{{ money(ws.price) }}</p>
+      <ul class="facts">
+        <li><span>{{ t('f.starts_at') }}</span><b>{{ ws.starts_at|dt }}</b></li>
+        <li><span>{{ t('ws.timezone') }}</span><b>{{ tzname }}</b></li>
+        <li><span>{{ t('f.duration_minutes') }}</span><b>{{ t('course.minutes', n=ws.duration_minutes) }}</b></li>
+        <li><span>{{ t('ws.format') }}</span><b>{{ t('ws.online') }}</b></li>
+        <li><span>{{ t('ws.seats') }}</span><b>{{ ws.seats_left }} / {{ ws.capacity }}</b></li>
+      </ul>
+      {% if reg %}
+        <p class="notice-box notice-box--ok">{{ t('ws.you_registered') }}</p>
+        {% if ws.is_upcoming %}<form method="post" action="{{ url_for('workshops.cancel', slug=ws.slug) }}" data-confirm="{{ t('ws.cancel_confirm') }}">{{ csrf() }}<button class="btn btn--ghost btn--block" type="submit">{{ t('ws.cancel') }}</button></form>{% endif %}
+      {% elif not ws.is_upcoming %}
+        <p class="notice-box">{{ t('ws.closed') }}</p>
+      {% elif ws.seats_left <= 0 %}
+        <p class="notice-box">{{ t('ws.full') }}</p>
+      {% elif current_user.is_authenticated %}
+        <form method="post" action="{{ url_for('workshops.register', slug=ws.slug) }}">{{ csrf() }}<button class="btn btn--gold btn--block btn--lg" type="submit">{{ t('ws.register') }}</button></form>
+        {% if ws.price %}<p class="fineprint">{{ t('course.pay_note') }}</p>{% endif %}
+      {% else %}
+        <a class="btn btn--gold btn--block btn--lg" href="{{ url_for('auth.login', next=request.path) }}">{{ t('ws.login_to_register') }}</a>
+      {% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

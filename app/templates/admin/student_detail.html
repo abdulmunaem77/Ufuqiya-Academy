@@ -1,0 +1,12 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import post_btn with context %}
+{% block title %}{{ u.name }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ u.name }}</h1><a class="link-arrow" href="{{ url_for('admin.students') }}">{{ t('common.back') }}</a></header>
+<section class="panel"><dl class="dl-grid"><dt>{{ t('f.email') }}</dt><dd>{{ u.email }}</dd><dt>{{ t('col.joined') }}</dt><dd>{{ u.created_at|dt }}</dd><dt>{{ t('col.last_login') }}</dt><dd>{{ u.last_login_at|dt }}</dd>
+<dt>{{ t('f.status') }}</dt><dd>{{ t('status.active') if u.is_active_account else t('status.disabled') }}</dd></dl>
+{{ post_btn(url_for('admin.student_toggle', uid=u.id), t('admin.deactivate') if u.is_active_account else t('admin.activate'), 'btn btn--sm btn--ghost', 'admin.confirm_toggle') }}</section>
+<section class="panel"><h2>{{ t('entity.courses') }}</h2><ul class="rows rows--compact">{% for e, p in rows %}<li><div><b>{{ loc(e.course, 'title') }}</b><small>{{ p[0] }}% · {{ p[1] }}/{{ p[2] }}</small></div><span class="badge badge--{{ e.status }}">{{ t('status.' ~ e.status) }}</span></li>{% else %}<li class="empty">{{ t('common.none_yet') }}</li>{% endfor %}</ul></section>
+<section class="panel"><h2>{{ t('entity.workshops') }}</h2><ul class="rows rows--compact">{% for r in regs %}<li><div><b>{{ loc(r.workshop, 'title') }}</b><small>{{ r.workshop.starts_at|dt }}</small></div><span class="badge">{{ r.status }}</span></li>{% else %}<li class="empty">{{ t('common.none_yet') }}</li>{% endfor %}</ul></section>
+<section class="panel"><h2>{{ t('admin.nav.bookings') }}</h2><ul class="rows rows--compact">{% for b in books %}<li><div><b>{{ loc(b.service, 'title') }}</b><small>{{ b.preferred_at|dt }}</small></div><span class="badge badge--{{ b.status }}">{{ t('status.' ~ b.status) }}</span></li>{% else %}<li class="empty">{{ t('common.none_yet') }}</li>{% endfor %}</ul></section>
+{% endblock %}

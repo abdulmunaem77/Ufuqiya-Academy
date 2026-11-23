@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}{{ t(title_key) }}{% endblock %}
+{% block content %}
+<section class="section section--ivory error-page">
+  <div class="wrap">
+    <p class="error-page__code">{{ code }}</p>
+    <h1>{{ t(title_key) }}</h1>
+    <p>{{ t(msg_key) }}</p>
+    <p><a class="btn btn--navy" href="{{ url_for('main.home') }}">{{ t('err.home') }}</a></p>
+  </div>
+</section>
+{% endblock %}

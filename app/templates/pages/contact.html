@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, field, csrf with context %}
+{% block title %}{{ t('nav.contact') }}{% endblock %}
+{% block content %}
+{{ page_head(t('nav.contact'), t('contact.sub')) }}
+<section class="section section--ivory">
+  <div class="wrap split split--form">
+    <form class="form card-form" method="post" novalidate>
+      {{ csrf() }}
+      {{ field(form.name, autocomplete='name', maxlength=120) }}
+      {{ field(form.email, type='email', autocomplete='email', maxlength=254) }}
+      {{ field(form.topic, prefix='topic.') }}
+      {{ field(form.message, rows=6, maxlength=3000) }}
+      <div class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <button class="btn btn--navy btn--lg" type="submit">{{ t('contact.send') }}</button>
+    </form>
+    <aside class="info-card">
+      <h2>{{ t('contact.info') }}</h2>
+      <dl>
+        <dt>{{ t('contact.email') }}</dt><dd>{{ site('contact_email') }}</dd>
+        <dt>{{ t('contact.hours') }}</dt><dd>{{ site('contact_hours') }}</dd>
+        <dt>{{ t('contact.mode') }}</dt><dd>{{ t('contact.mode_v') }}</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+{% endblock %}

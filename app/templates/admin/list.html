@@ -1,0 +1,21 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager, post_btn with context %}
+{% block title %}{{ t(ent.label) }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ t(ent.label) }}</h1><a class="btn btn--navy" href="{{ url_for('admin.entity_edit', entity=ent.key) }}">+ {{ t('admin.new') }}</a></header>
+{% if ent.search %}<form class="filters filters--inline" method="get"><input type="search" name="q" value="{{ q }}" maxlength="80" placeholder="{{ t('search.go') }}…" aria-label="{{ t('search.go') }}"><button class="btn btn--sm btn--navy" type="submit">{{ t('search.go') }}</button></form>{% endif %}
+<div class="table-wrap"><table class="table">
+  <thead><tr>{% for h, _ in ent.columns %}<th>{{ t(h) }}</th>{% endfor %}<th></th></tr></thead>
+  <tbody>
+  {% for o, cells in rows %}
+    <tr>{% for c in cells %}<td>{{ c }}</td>{% endfor %}
+      <td class="actions">
+        {% if ent.key == 'courses' %}<a class="btn btn--sm btn--ghost" href="{{ url_for('admin.lessons', course_id=o.id) }}">{{ t('admin.lessons') }}</a>{% endif %}
+        {% if ent.key == 'workshops' %}<a class="btn btn--sm btn--ghost" href="{{ url_for('admin.workshop_regs', wid=o.id) }}">{{ t('admin.registrations') }}</a>{% endif %}
+        <a class="btn btn--sm btn--ghost" href="{{ url_for('admin.entity_edit', entity=ent.key, oid=o.id) }}">{{ t('common.edit') }}</a>
+        {{ post_btn(url_for('admin.entity_delete', entity=ent.key, oid=o.id), t('common.delete'), 'btn btn--sm btn--danger', 'admin.confirm_delete') }}
+      </td></tr>
+  {% else %}<tr><td colspan="{{ ent.columns|length + 1 }}" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}
+  </tbody></table></div>
+{{ pager(pagination, 'admin.entity_list', entity=ent.key, q=q) }}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ t('admin.nav.content') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.content') }}</h1><p class="fineprint">{{ t('admin.content_note') }}</p>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('col.item') }}</th><th>العربية</th><th>English</th><th></th></tr></thead><tbody>
+{% for key, ar, en in rows %}<tr><td><b>{{ t('content.' ~ key) }}</b><small class="block"><code>{{ key }}</code></small></td><td class="notes">{{ ar|truncate(90) }}</td><td class="notes" dir="ltr">{{ en|truncate(90) }}</td>
+<td class="actions"><a class="btn btn--sm btn--ghost" href="{{ url_for('admin.content_edit', key=key) }}">{{ t('common.edit') }}</a></td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

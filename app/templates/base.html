@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ t('brand.name') }}{% endblock %}{% if self.title() | trim != t('brand.name') %} · {{ t('brand.short') }}{% endif %}</title>
+  <meta name="description" content="{% block description %}{{ t('brand.tagline') }}{% endblock %}">
+  <meta name="theme-color" content="#062446">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip" href="#main">{{ t('nav.skip') }}</a>
+  {% block notice %}
+  {% if config.SHOW_SAMPLE_NOTICE %}<div class="notice"><div class="wrap">{{ t('notice.sample') }}</div></div>{% endif %}
+  {% endblock %}
+  {% block header %}{% include 'partials/header.html' %}{% endblock %}
+  {% include 'partials/flash.html' %}
+  <main id="main">{% block content %}{% endblock %}</main>
+  {% block footer %}{% include 'partials/footer.html' %}{% endblock %}
+</body>
+</html>

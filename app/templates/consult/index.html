@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, sample_badge with context %}
+{% block title %}{{ t('nav.consult') }}{% endblock %}
+{% block content %}
+{{ page_head(t('nav.consult'), t('consult.sub')) }}
+<section class="section section--ivory"><div class="wrap">
+  <div class="grid grid--2">
+    {% for s in services %}
+    <article class="card card--service">
+      <div class="card__body">
+        <p class="card__meta"><span>{{ t('consult.minutes', n=s.duration_minutes) }}</span>{{ sample_badge(s) }}</p>
+        <h3 class="card__title">{{ loc(s, 'title') }}</h3>
+        <p class="card__text">{{ loc(s, 'summary') }}</p>
+        <p class="card__by">{{ loc(s.instructor, 'name') }}</p>
+      </div>
+      <div class="card__foot"><span class="price{% if not s.price %} price--free{% endif %}">{{ money(s.price) }}</span>
+        <a class="btn btn--navy btn--sm" href="{{ url_for('consult.book', slug=s.slug) }}">{{ t('consult.book') }}</a></div>
+    </article>
+    {% else %}<p class="empty">{{ t('common.none_yet') }}</p>{% endfor %}
+  </div>
+  <p class="fineprint">{{ t('consult.how') }}</p>
+</div></section>
+{% endblock %}

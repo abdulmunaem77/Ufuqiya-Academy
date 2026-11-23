@@ -1,0 +1,12 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager, status_form with context %}
+{% block title %}{{ t('admin.nav.bookings') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.bookings') }}</h1>
+<nav class="tabs"><a href="{{ url_for('admin.bookings') }}" {% if not status %}aria-current="page"{% endif %}>{{ t('common.all') }}</a>{% for s in statuses %}<a href="{{ url_for('admin.bookings', status=s) }}" {% if status == s %}aria-current="page"{% endif %}>{{ t('status.' ~ s) }}</a>{% endfor %}</nav>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('f.name') }}</th><th>{{ t('entity.services') }}</th><th>{{ t('f.when') }}</th><th>{{ t('f.notes') }}</th><th>{{ t('f.status') }}</th></tr></thead><tbody>
+{% for b in pagination.items %}<tr><td>{{ b.user.name }}<small class="block">{{ b.user.email }}</small></td><td>{{ loc(b.service, 'title') }}</td><td>{{ b.preferred_at|dt }}</td><td class="notes">{{ b.notes }}</td>
+<td>{{ status_form(url_for('admin.booking_status', oid=b.id), b.status, statuses) }}</td></tr>
+{% else %}<tr><td colspan="5" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, 'admin.bookings', status=status) }}
+{% endblock %}

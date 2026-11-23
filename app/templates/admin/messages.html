@@ -1,0 +1,12 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager, status_form with context %}
+{% block title %}{{ t('admin.nav.messages') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.messages') }}</h1>
+<nav class="tabs"><a href="{{ url_for('admin.messages') }}" {% if not status %}aria-current="page"{% endif %}>{{ t('common.all') }}</a>{% for s in ['new','read','resolved'] %}<a href="{{ url_for('admin.messages', status=s) }}" {% if status == s %}aria-current="page"{% endif %}>{{ t('status.' ~ s) }}</a>{% endfor %}</nav>
+<div class="stack">{% for m in pagination.items %}
+<article class="panel msg"><header><div><b>{{ m.name }}</b> <a href="mailto:{{ m.email }}">{{ m.email }}</a><small class="block">{{ m.created_at|dt }} · {{ t('topic.' ~ m.topic) }}</small></div>
+{{ status_form(url_for('admin.message_status', oid=m.id), m.status, ['new','read','resolved']) }}</header><p>{{ m.message }}</p></article>
+{% else %}<p class="empty">{{ t('common.none_yet') }}</p>{% endfor %}</div>
+{{ pager(pagination, 'admin.messages', status=status) }}
+{% endblock %}

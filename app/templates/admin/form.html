@@ -1,0 +1,21 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import field, csrf with context %}
+{% block title %}{{ t(ent.label) }}{% endblock %}
+{% block admin %}
+<header class="admin__head"><h1>{{ t(ent.label) }} — {{ t('admin.new') if creating else t('common.edit') }}</h1><a class="link-arrow" href="{{ url_for('admin.entity_list', entity=ent.key) }}">{{ t('common.back') }}</a></header>
+<form class="form admin-form" method="post" novalidate>
+  {{ csrf() }}
+  <div class="admin-form__grid">
+  {% for f in form if f.name != 'csrf_token' %}
+    {% if f.type == 'BooleanField' %}{{ field(f) }}
+    {% elif f.name == 'level' %}{{ field(f, prefix='level.') }}
+    {% elif f.type == 'TextAreaField' %}<div class="admin-form__wide">{{ field(f, rows=6) }}</div>
+    {% elif f.name == 'slug' %}{{ field(f, hint='admin.slug_hint', dir='ltr') }}
+    {% elif f.type == 'DateTimeLocalField' %}{{ field(f, hint='admin.tz_hint') }}
+    {% else %}{{ field(f) }}{% endif %}
+  {% endfor %}
+  </div>
+  <div class="form__actions"><button class="btn btn--navy btn--lg" type="submit">{{ t('common.save') }}</button>
+  <a class="btn btn--ghost btn--lg" href="{{ url_for('admin.entity_list', entity=ent.key) }}">{{ t('common.cancel') }}</a></div>
+</form>
+{% endblock %}

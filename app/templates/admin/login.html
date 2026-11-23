@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import field, csrf with context %}
+{% block title %}{{ t('admin.login_title') }}{% endblock %}
+{% block notice %}{% endblock %}
+{% block content %}
+<section class="auth auth--admin">
+  <div class="auth__card">
+    <h1>{{ t('admin.login_title') }}</h1>
+    <p class="auth__sub">{{ t('admin.login_sub') }}</p>
+    <form class="form" method="post" novalidate>
+      {{ csrf() }}
+      <input type="hidden" name="next" value="{{ request.args.get('next','') }}">
+      {{ field(form.email, type='email', autocomplete='username', maxlength=254, autofocus=true) }}
+      {{ field(form.password, autocomplete='current-password', maxlength=128) }}
+      <button class="btn btn--navy btn--block btn--lg" type="submit">{{ t('nav.login') }}</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

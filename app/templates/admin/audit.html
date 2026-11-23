@@ -1,0 +1,11 @@
+{% extends 'admin/base.html' %}
+{% from 'partials/macros.html' import pager with context %}
+{% block title %}{{ t('admin.nav.audit') }}{% endblock %}
+{% block admin %}
+<h1>{{ t('admin.nav.audit') }}</h1><p class="fineprint">{{ t('admin.audit_note') }}</p>
+<form class="filters filters--inline" method="get"><input type="search" name="action" value="{{ action }}" maxlength="60" placeholder="login, enroll, role…" aria-label="action"><button class="btn btn--sm btn--navy" type="submit">{{ t('search.go') }}</button></form>
+<div class="table-wrap"><table class="table table--compact"><thead><tr><th>{{ t('col.date') }}</th><th>{{ t('col.actor') }}</th><th>{{ t('col.action') }}</th><th>{{ t('col.target') }}</th><th>{{ t('col.details') }}</th><th>IP</th></tr></thead><tbody>
+{% for l in pagination.items %}<tr><td>{{ l.created_at|dt }}</td><td>{{ l.actor_email or '—' }}</td><td><code>{{ l.action }}</code></td><td>{{ l.target }}</td><td>{{ l.details }}</td><td>{{ l.ip }}</td></tr>
+{% else %}<tr><td colspan="6" class="empty">{{ t('common.none_yet') }}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(pagination, 'admin.audit_log', action=action) }}
+{% endblock %}

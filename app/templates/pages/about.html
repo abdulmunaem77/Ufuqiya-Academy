@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head with context %}
+{% block title %}{{ t('nav.about') }}{% endblock %}
+{% block content %}
+{{ page_head(t('nav.about'), t('brand.tagline')) }}
+<section class="section section--ivory">
+  <div class="wrap prose">
+    <h2>{{ t('about.mission_title') }}</h2>
+    <p>{{ site('about_text') }}</p>
+    <div class="grid grid--3 values">
+      <div class="value"><h3>{{ t('about.v1_t') }}</h3><p>{{ t('about.v1_d') }}</p></div>
+      <div class="value"><h3>{{ t('about.v2_t') }}</h3><p>{{ t('about.v2_d') }}</p></div>
+      <div class="value"><h3>{{ t('about.v3_t') }}</h3><p>{{ t('about.v3_d') }}</p></div>
+    </div>
+    <p><a class="btn btn--navy" href="{{ url_for('main.contact') }}">{{ t('nav.contact') }}</a></p>
+  </div>
+</section>
+{% endblock %}

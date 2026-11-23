@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block notice %}{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block body_class %}is-admin{% endblock %}
+{% block content %}
+{% set ep = request.endpoint or '' %}
+<div class="admin">
+  <aside class="admin__side">
+    <a class="admin__brand" href="{{ url_for('admin.dashboard') }}"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="96" height="76"></a>
+    <p class="admin__who">{{ current_user.name }}<small>{{ t('role.' ~ current_user.role) }}</small></p>
+    <nav aria-label="admin">
+      <ul>
+        {% macro item(perm, endpoint, label, **kw) %}{% if current_user.can(perm) %}<li><a href="{{ url_for(endpoint, **kw) }}" {% if request.path == url_for(endpoint, **kw) or (request.path.startswith(url_for(endpoint, **kw)) and url_for(endpoint, **kw) != url_for('admin.dashboard')) %}aria-current="page"{% endif %}>{{ t(label) }}</a></li>{% endif %}{% endmacro %}
+        {{ item('dashboard', 'admin.dashboard', 'admin.nav.dashboard') }}
+        {{ item('courses', 'admin.entity_list', 'entity.courses', entity='courses') }}
+        {{ item('courses', 'admin.entity_list', 'entity.categories', entity='categories') }}
+        {{ item('courses', 'admin.entity_list', 'entity.instructors', entity='instructors') }}
+        {{ item('workshops', 'admin.entity_list', 'entity.workshops', entity='workshops') }}
+        {{ item('consultations', 'admin.entity_list', 'entity.services', entity='services') }}
+        {{ item('consultations', 'admin.bookings', 'admin.nav.bookings') }}
+        {{ item('students', 'admin.students', 'admin.nav.students') }}
+        {{ item('enrollments', 'admin.enrollments', 'admin.nav.enrollments') }}
+        {{ item('content', 'admin.content', 'admin.nav.content') }}
+        {{ item('content', 'admin.entity_list', 'entity.testimonials', entity='testimonials') }}
+        {{ item('messages', 'admin.messages', 'admin.nav.messages') }}
+        {{ item('users', 'admin.users', 'admin.nav.users') }}
+        {{ item('audit', 'admin.audit_log', 'admin.nav.audit') }}
+      </ul>
+    </nav>
+    <div class="admin__foot">
+      {% set other = 'en' if lang == 'ar' else 'ar' %}
+      <a href="{{ url_for('main.set_language', code=other, next=request.full_path.rstrip('?')) }}" lang="{{ other }}">{{ 'English' if lang == 'ar' else 'العربية' }}</a>
+      <a href="{{ url_for('main.home') }}">{{ t('admin.view_site') }}</a>
+      <a href="{{ url_for('auth.change_password') }}">{{ t('account.change_password') }}</a>
+      <form method="post" action="{{ url_for('auth.logout') }}">{% from 'partials/macros.html' import csrf with context %}{{ csrf() }}<button class="linkbtn" type="submit">{{ t('nav.logout') }}</button></form>
+    </div>
+  </aside>
+  <div class="admin__main">
+    {% include 'partials/flash.html' %}
+    <div class="admin__content">{% block admin %}{% endblock %}</div>
+  </div>
+</div>
+{% endblock %}
