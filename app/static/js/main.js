@@ -1,4 +1,4 @@
-/* Ufuqia Academy — progressive enhancement only (site works without JS). */
+/* WAHJ Academy — progressive enhancement only (site works without JS). */
 (function () {
   'use strict';
 

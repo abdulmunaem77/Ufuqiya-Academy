@@ -1,4 +1,6 @@
-# أكاديمية أفقيا · Ufuqia Academy — Training & Consulting
+# أكاديمية وهج للتدريب والاستشارات الرقمية · WAHJ Academy — Digital Training & Consulting
+
+> *من شغف التعلم إلى التميز* — Formerly “Ufuqia Academy”; rebranded to WAHJ (git tag `pre-wahj-rebrand` marks the last pre-rebrand state).
 
 A bilingual (Arabic RTL / English LTR) learning platform: online courses, live workshops,
 consultation booking, student dashboard and a role-based owner control panel.
@@ -23,7 +25,7 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env            # then edit: set OWNER_EMAIL (and optionally SECRET_KEY)
 export FLASK_APP=wsgi.py
-flask init-db                   # applies migrations (creates instance/ufuqia.db)
+flask init-db                   # applies migrations (creates instance/wahj.db; an existing instance/ufuqia.db is kept and reused)
 flask seed                      # fictional sample content (optional)
 flask create-owner              # prompts for the password (hidden); see below
 flask run                       # http://127.0.0.1:5000   admin: /admin/login
@@ -54,7 +56,7 @@ generic error pages (details only in logs) · open-redirect guard · ownership c
 
 ## Deployment (Linux, gunicorn + nginx)
 1. `python -m venv .venv && pip install -r requirements.txt "psycopg[binary]" redis`
-2. PostgreSQL: create DB/user; set `DATABASE_URL=postgresql+psycopg://user:pass@host/ufuqia`.
+2. PostgreSQL: create DB/user; set `DATABASE_URL=postgresql+psycopg://user:pass@host/wahj`.
 3. `.env`: `APP_ENV=production`, a random `SECRET_KEY`, `RATELIMIT_STORAGE_URI=redis://localhost:6379`
    (needed when running more than one worker), `TRUSTED_PROXY_COUNT=1`.
 4. `flask init-db && flask create-owner` (add `flask seed` only for a demo).
@@ -81,7 +83,24 @@ migrations/     Alembic history        tests/  pytest suite        owner_config.
 | Lessons | Text **plus video embeds** (YouTube / Vimeo links only, rebuilt from the parsed ID; CSP `frame-src` allow-list). No file uploads or video hosting. |
 | Certificates | Issued at 100 % lesson completion, printable (save as PDF), unique code, public verification page `/verify/<code>`. Certificates for the fictional sample courses are labelled *not accredited*. |
 | 2FA | **TOTP** (RFC 6238, verified against the RFC test vector) with QR code, one-time backup codes, replay protection, attempt limit and 5-minute window. Optional for students, **mandatory for staff** when `REQUIRE_STAFF_2FA` is on (default in production). |
+| Reviews & notifications | Course ratings (1–5, enrolled learners only, moderation page) and in-app notifications (bell + page) for payments, bookings, enrolments, certificates. Stored in `reviews` / `notifications`. |
 | Rate limits | Redis storage supported and tested (two app instances share one counter). Required on Vercel. |
+
+## Database, backup and restore
+Schema and relations: **`docs/DATABASE.md`**. Local PostgreSQL/Redis for development: `docker-compose.yml` (untested in the sandbox).
+Moving from SQLite to PostgreSQL: set `DATABASE_URL`, run `flask init-db` (creates the same schema), then `flask create-owner`;
+there is no automatic data copy from SQLite to PostgreSQL.
+
+```bash
+flask backup-db --keep 14                    # -> backups/wahj-YYYYmmdd-HHMMSS.{pgdump|sqlite3}, mode 0600, prune to newest 14
+flask restore-db backups/<file> --yes        # replaces the current DB; a safety backup is taken first (backups/)
+```
+* SQLite uses the online backup API; PostgreSQL uses `pg_dump --format=custom` / `pg_restore --single-transaction`
+  (install `postgresql-client`; the password travels via `PGPASSWORD`, never on the command line).
+* A failed PostgreSQL restore leaves the database unchanged (single transaction). A backup made for one engine cannot be restored into the other (refused).
+* Schedule it, e.g. `0 3 * * * cd /srv/wahj && .venv/bin/flask backup-db --keep 14`, and copy `backups/` off the server.
+  Backups contain personal data: keep them private/encrypted.
+* **Test a restore on a copy before you need it.** Verified in development: PostgreSQL 16 backup → delete data → restore → 8 courses/32 lessons and all 15 CHECK constraints back.
 
 ## Environment variables
 All variables are listed, with comments, in **`.env.example`** (the single source of truth). Required in production:
@@ -112,7 +131,7 @@ rate-limit counters need Redis.
 > (boots, health check, production guards), but a real Vercel build could not be run from the development sandbox.
 
 ## Verification performed
-`pytest` (116 tests) passes on **SQLite** and on **PostgreSQL 16** (`TEST_DATABASE_URL`), on Python 3.13 and on Python 3.12 from a clean venv
+`pytest` (125 tests) passes on **SQLite** and on **PostgreSQL 16** (`TEST_DATABASE_URL`), on Python 3.13 and on Python 3.12 from a clean venv
 using only `requirements.txt`; migrations were applied to a populated SQLite database and to PostgreSQL; Redis-shared rate limiting was run against a real Redis;
 pages were screenshotted in Chromium (AR/EN, desktop/mobile) with no console/CSP errors.
 

@@ -7,7 +7,7 @@
 {% set ep = request.endpoint or '' %}
 <div class="admin">
   <aside class="admin__side">
-    <a class="admin__brand" href="{{ url_for('admin.dashboard') }}"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="96" height="76"></a>
+    <a class="admin__brand" href="{{ url_for('admin.dashboard') }}"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="96" height="72"></a>
     <p class="admin__who">{{ current_user.name }}<small>{{ t('role.' ~ current_user.role) }}</small></p>
     <nav aria-label="admin">
       <ul>
@@ -16,6 +16,7 @@
         {{ item('courses', 'admin.entity_list', 'entity.courses', entity='courses') }}
         {{ item('courses', 'admin.entity_list', 'entity.categories', entity='categories') }}
         {{ item('courses', 'admin.entity_list', 'entity.instructors', entity='instructors') }}
+        {{ item('courses', 'admin.reviews', 'admin.nav.reviews') }}
         {{ item('workshops', 'admin.entity_list', 'entity.workshops', entity='workshops') }}
         {{ item('consultations', 'admin.entity_list', 'entity.services', entity='services') }}
         {{ item('consultations', 'admin.bookings', 'admin.nav.bookings') }}

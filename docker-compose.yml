@@ -1,0 +1,19 @@
+# Local PostgreSQL + Redis that mirror production.  NOT tested in the build sandbox (no Docker there).
+#   docker compose up -d
+#   export DATABASE_URL=postgresql://wahj:wahj-dev-only@localhost:5432/wahj
+#   export RATELIMIT_STORAGE_URI=redis://localhost:6379
+# The credentials below are for local development only — never reuse them anywhere real.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: wahj
+      POSTGRES_PASSWORD: wahj-dev-only
+      POSTGRES_DB: wahj
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["wahj-pg:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7
+    ports: ["127.0.0.1:6379:6379"]
+volumes:
+  wahj-pg:

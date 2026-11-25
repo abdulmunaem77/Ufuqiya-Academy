@@ -7,7 +7,7 @@ Written with portable SQLAlchemy types only so the same schema runs on SQLite
 from datetime import datetime, timedelta, timezone
 
 from flask_login import UserMixin
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .extensions import db, login_manager
@@ -38,6 +38,7 @@ ROLE_PERMISSIONS = {
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
+    __table_args__ = (CheckConstraint("role IN ('owner','admin','editor','support','student')", name="ck_user_role"),)
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(254), unique=True, nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
@@ -149,6 +150,8 @@ LEVELS = ("beginner", "intermediate", "advanced")
 
 class Course(Bilingual, db.Model):
     __tablename__ = "courses"
+    __table_args__ = (CheckConstraint("price >= 0", name="ck_course_price"),
+                      CheckConstraint("duration_hours > 0", name="ck_course_duration"))
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(120), unique=True, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False, index=True)
@@ -177,6 +180,12 @@ class Course(Bilingual, db.Model):
     def is_free(self):
         return not self.price
 
+    def rating_summary(self):
+        """(average, count) over visible reviews."""
+        avg, n = db.session.query(db.func.avg(Review.rating), db.func.count(Review.id)).filter(
+            Review.course_id == self.id, Review.is_visible.is_(True)).one()
+        return (round(float(avg), 1) if avg else 0.0), int(n or 0)
+
 
 class Lesson(Bilingual, db.Model):
     __tablename__ = "lessons"
@@ -198,7 +207,8 @@ ENROLL_STATUSES = (ENROLL_PENDING, ENROLL_ACTIVE, ENROLL_CANCELLED)
 
 class Enrollment(db.Model):
     __tablename__ = "enrollments"
-    __table_args__ = (UniqueConstraint("user_id", "course_id", name="uq_enrollment"),)
+    __table_args__ = (UniqueConstraint("user_id", "course_id", name="uq_enrollment"),
+                      CheckConstraint("status IN ('pending','active','cancelled')", name="ck_enrollment_status"))
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False, index=True)
@@ -228,6 +238,9 @@ class LessonProgress(db.Model):
 
 class Workshop(Bilingual, db.Model):
     __tablename__ = "workshops"
+    __table_args__ = (CheckConstraint("price >= 0", name="ck_workshop_price"),
+                      CheckConstraint("capacity > 0", name="ck_workshop_capacity"),
+                      CheckConstraint("duration_minutes > 0", name="ck_workshop_duration"))
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(120), unique=True, nullable=False)
     instructor_id = db.Column(db.Integer, db.ForeignKey("instructors.id"), nullable=False)
@@ -262,7 +275,8 @@ class Workshop(Bilingual, db.Model):
 
 class WorkshopRegistration(db.Model):
     __tablename__ = "workshop_registrations"
-    __table_args__ = (UniqueConstraint("user_id", "workshop_id", name="uq_ws_reg"),)
+    __table_args__ = (UniqueConstraint("user_id", "workshop_id", name="uq_ws_reg"),
+                      CheckConstraint("status IN ('registered','pending','cancelled')", name="ck_wsreg_status"))
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     workshop_id = db.Column(db.Integer, db.ForeignKey("workshops.id"), nullable=False, index=True)
@@ -274,6 +288,8 @@ class WorkshopRegistration(db.Model):
 
 class ConsultationService(Bilingual, db.Model):
     __tablename__ = "consultation_services"
+    __table_args__ = (CheckConstraint("price >= 0", name="ck_service_price"),
+                      CheckConstraint("duration_minutes > 0", name="ck_service_duration"))
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(120), unique=True, nullable=False)
     instructor_id = db.Column(db.Integer, db.ForeignKey("instructors.id"), nullable=False)
@@ -293,6 +309,7 @@ BOOKING_STATUSES = ("pending", "confirmed", "completed", "cancelled")
 
 class ConsultationBooking(db.Model):
     __tablename__ = "consultation_bookings"
+    __table_args__ = (CheckConstraint("status IN ('pending','confirmed','completed','cancelled')", name="ck_booking_status"),)
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     service_id = db.Column(db.Integer, db.ForeignKey("consultation_services.id"), nullable=False)
@@ -361,6 +378,9 @@ class Payment(db.Model):
     a student pays offline (e.g. bank transfer), submits the reference they were
     given, and staff confirm or reject it. Nothing here is a real charge."""
     __tablename__ = "payments"
+    __table_args__ = (CheckConstraint("amount >= 0", name="ck_payment_amount"),
+                      CheckConstraint("status IN ('awaiting','submitted','confirmed','rejected','cancelled')", name="ck_payment_status"),
+                      CheckConstraint("kind IN ('course','workshop','consultation')", name="ck_payment_kind"))
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     kind = db.Column(db.String(20), nullable=False)
@@ -403,3 +423,38 @@ class EmailOutbox(db.Model):
     body = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), nullable=False, default="not_configured")
     error = db.Column(db.String(300), default="")
+
+
+class Review(db.Model):
+    """One rating (1-5) + optional comment per student per course; only active
+    enrolees may write one. Never seeded: no fabricated reviews."""
+    __tablename__ = "reviews"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", name="uq_review"),
+                      CheckConstraint("rating BETWEEN 1 AND 5", name="ck_review_rating"))
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False, index=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.String(1000), default="")
+    is_visible = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    user = db.relationship("User")
+    course = db.relationship("Course")
+
+
+class Notification(db.Model):
+    """In-app notification for one user (payment decisions, bookings, certificates…)."""
+    __tablename__ = "notifications"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    kind = db.Column(db.String(40), nullable=False)
+    title_ar = db.Column(db.String(200), nullable=False)
+    title_en = db.Column(db.String(200), nullable=False)
+    body_ar = db.Column(db.String(500), default="")
+    body_en = db.Column(db.String(500), default="")
+    url = db.Column(db.String(300), default="")
+    is_read = db.Column(db.Boolean, nullable=False, default=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+
+    def loc(self, field, lang):
+        return getattr(self, f"{field}_{lang}", "") or getattr(self, f"{field}_{'en' if lang == 'ar' else 'ar'}", "")

@@ -2,7 +2,7 @@
 <header class="site-header">
   <div class="wrap site-header__bar">
     <a class="brand" href="{{ url_for('main.home') }}" aria-label="{{ t('brand.name') }}">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="90" height="71">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="90" height="68">
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
       <span class="sr">{{ t('nav.menu') }}</span><i></i><i></i><i></i>
@@ -21,6 +21,8 @@
         <a class="lang-switch" href="{{ url_for('main.set_language', code=other, next=request.full_path.rstrip('?')) }}" lang="{{ other }}" hreflang="{{ other }}">{{ 'English' if lang == 'ar' else 'العربية' }}</a>
         {% if current_user.is_authenticated %}
           {% if is_staff %}<a class="btn btn--sm btn--ghost" href="{{ url_for('admin.dashboard') }}">{{ t('nav.admin') }}</a>{% endif %}
+          {% set unread = unread_count() %}
+          <a class="bell" href="{{ url_for('student.notifications') }}" aria-label="{{ t('notif.title') }}">🔔{% if unread %}<b class="bell__n">{{ unread if unread < 100 else '99+' }}</b>{% endif %}</a>
           <a class="btn btn--sm btn--navy" href="{{ url_for('student.dashboard') }}">{{ t('nav.dashboard') }}</a>
         {% else %}
           <a class="btn btn--sm btn--ghost" href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a>

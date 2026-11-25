@@ -40,7 +40,7 @@
     <p class="card__meta"><span>{{ loc(c.category, 'name') }}</span>{{ sample_badge(c) }}</p>
     <h3 class="card__title"><a href="{{ url_for('courses.detail', slug=c.slug) }}">{{ loc(c, 'title') }}</a></h3>
     <p class="card__text">{{ loc(c, 'summary') }}</p>
-    <p class="card__by">{{ loc(c.instructor, 'name') }}</p>
+    {% set rs = c.rating_summary() %}<p class="card__by">{{ loc(c.instructor, 'name') }}{% if rs[1] %} · <span class="stars">★ {{ rs[0] }}</span>{% endif %}</p>
   </div>
   <div class="card__foot">
     <span class="price{% if c.is_free %} price--free{% endif %}">{{ money(c.price) }}</span>

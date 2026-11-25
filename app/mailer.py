@@ -10,7 +10,7 @@ from itsdangerous import BadData, URLSafeTimedSerializer
 from .extensions import db
 from .models import EmailOutbox
 
-log = logging.getLogger("ufuqia.mail")
+log = logging.getLogger("wahj.mail")
 
 
 def _clean(value):
@@ -57,7 +57,7 @@ def notify_staff(subject, body, kind):
 
 # ---- signed one-time-ish tokens ------------------------------------------------
 def _ser(purpose):
-    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt=f"ufuqia-{purpose}")
+    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt=f"ufuqia-{purpose}")  # legacy salt kept on purpose: renaming would invalidate links already e-mailed
 
 
 def make_token(purpose, user):

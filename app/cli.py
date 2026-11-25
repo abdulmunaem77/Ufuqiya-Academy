@@ -18,6 +18,33 @@ def register_cli(app):
         upgrade()
         click.echo("Database schema is up to date.")
 
+    @app.cli.command("backup-db")
+    @click.option("--out", default="backups", show_default=True, help="Directory for the backup file.")
+    @click.option("--keep", default=0, type=int, help="Keep only the newest N backups (0 = keep all).")
+    def backup_db(out, keep):
+        """Write a timestamped backup of the configured database."""
+        from .backup import BackupError, backup
+        try:
+            path = backup(current_app.config["SQLALCHEMY_DATABASE_URI"], out, keep)
+        except BackupError as exc:
+            raise click.ClickException(str(exc))
+        click.echo(f"Backup written: {path}")
+
+    @app.cli.command("restore-db")
+    @click.argument("file", type=click.Path(exists=True, dir_okay=False))
+    @click.option("--yes", is_flag=True, help="Confirm that the current data will be replaced.")
+    @click.option("--safety-dir", default="backups", show_default=True)
+    def restore_db(file, yes, safety_dir):
+        """Replace the configured database with FILE (a safety backup is taken first)."""
+        from .backup import BackupError, restore
+        if not yes:
+            raise click.ClickException("This REPLACES the current database. Re-run with --yes to confirm.")
+        try:
+            safety = restore(current_app.config["SQLALCHEMY_DATABASE_URI"], file, safety_dir)
+        except BackupError as exc:
+            raise click.ClickException(str(exc))
+        click.echo("Restore complete." + (f" Previous state saved at: {safety}" if safety else ""))
+
     @app.cli.command("seed")
     @click.option("--force", is_flag=True, help="Seed even if categories already exist.")
     def seed(force):

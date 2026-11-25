@@ -19,12 +19,12 @@ def month_name(m, lang):
 
 # Editable site copy (managed from the control panel). key -> (ar, en)
 SITE_DEFAULTS = {
-    "hero_title": ("معرفة نافعة، ومهارات تصنع المستقبل", "Useful knowledge, and skills that shape the future"),
-    "hero_lead": ("دورات احترافية وورش تفاعلية مباشرة واستشارات متخصصة في الذكاء الاصطناعي والتقنية والتسويق الرقمي والتطوير المهني.",
+    "hero_title": ("من شغف التعلم إلى التميز", "From passion for learning to excellence"),
+    "hero_lead": ("دورات احترافية وورش تفاعلية مباشرة واستشارات رقمية متخصصة في الذكاء الاصطناعي والتقنية والتسويق الرقمي والتطوير المهني.",
                   "Professional courses, live interactive workshops and expert consultations in AI, technology, digital marketing and professional development."),
-    "about_text": ("أكاديمية أفقيا للتدريب والاستشارات منصة تعليمية تؤمن بأن المعرفة النافعة والمهارات التطبيقية هي طريق الأفراد والمؤسسات نحو المستقبل. نقدّم محتوى عمليًا واضحًا، ونرافق المتعلّم من الفهم إلى التطبيق.",
-                   "Ufuqia Academy for Training & Consulting is a learning platform built on the belief that useful knowledge and applied skills are the way forward for people and organisations. We offer clear, practical content and accompany learners from understanding to application."),
-    "footer_blurb": ("معرفة نافعة، ومهارات تصنع المستقبل.", "Useful knowledge, and skills that shape the future."),
+    "about_text": ("أكاديمية وهج للتدريب والاستشارات الرقمية منصة تعليمية تؤمن بأن الشغف بالتعلم، حين يقترن بالمهارة التطبيقية، هو طريق الأفراد والمؤسسات إلى التميز. نقدّم محتوى عمليًا واضحًا، ونرافق المتعلّم من الفهم إلى التطبيق.",
+                   "WAHJ Academy for Digital Training & Consulting is a learning platform built on the belief that a passion for learning, joined with applied skills, is the road to excellence for people and organisations. We offer clear, practical content and accompany learners from understanding to application."),
+    "footer_blurb": ("من شغف التعلم إلى التميز.", "From passion for learning to excellence."),
     "contact_email": ("info@example.com (بريد تجريبي — يُستبدل ببريد الأكاديمية)", "info@example.com (placeholder — replace with the academy's address)"),
     "payment_instructions": ("للدفع حوّل المبلغ إلى حساب الأكاديمية ثم أدخل رقم الحوالة/المرجع في النموذج أدناه. (بيانات الحساب: تُضاف من لوحة التحكم ← محتوى الموقع.)",
                              "To pay, transfer the amount to the academy's account, then enter the transfer number/reference in the form below. (Account details: add them in Control panel → Site content.)"),
@@ -55,9 +55,9 @@ def site_text(key, lang):
 
 T = {
     # ---- brand / nav -----------------------------------------------------
-    "brand.name": ("أكاديمية أفقيا للتدريب والاستشارات", "Ufuqia Academy – Training & Consulting"),
-    "brand.short": ("أفقيا", "Ufuqia"),
-    "brand.tagline": ("معرفة نافعة، ومهارات تصنع المستقبل.", "Useful knowledge, and skills that shape the future."),
+    "brand.name": ("أكاديمية وهج للتدريب والاستشارات الرقمية", "WAHJ Academy – Digital Training & Consulting"),
+    "brand.short": ("وهج", "WAHJ"),
+    "brand.tagline": ("من شغف التعلم إلى التميز.", "From passion for learning to excellence."),
     "notice.sample": ("نسخة تجريبية: الدورات والمدرّبون والآراء المعروضة محتوى خيالي لأغراض العرض فقط.",
                       "Demo edition: the courses, instructors and testimonials shown are fictional content for demonstration only."),
     "nav.skip": ("تخطَّ إلى المحتوى", "Skip to content"),
@@ -152,7 +152,7 @@ T = {
     "auth.have_account": ("لديك حساب بالفعل؟", "Already have an account?"),
     "auth.invalid": ("بيانات الدخول غير صحيحة أو أن الحساب مقفل مؤقتًا.", "Incorrect credentials, or the account is temporarily locked."),
     "auth.logged_out": ("تم تسجيل خروجك.", "You have been logged out."),
-    "auth.welcome": ("مرحبًا بك في أفقيا!", "Welcome to Ufuqia!"),
+    "auth.welcome": ("مرحبًا بك في وهج!", "Welcome to WAHJ!"),
     "auth.password_hint": ("10 أحرف على الأقل، وتحتوي على حروف وأرقام.", "At least 10 characters, with letters and digits."),
     "account.profile": ("الملف الشخصي", "Profile"),
     "account.saved": ("تم حفظ التغييرات.", "Changes saved."),
@@ -431,7 +431,7 @@ T.update({
     # ---- certificates ---------------------------------------------------------------------------
     "cert.title": ("شهادة إتمام", "Certificate of completion"), "cert.get": ("احصل على شهادتك", "Get your certificate"),
     "cert.not_ready": ("أكمل جميع الدروس أولًا لتحصل على الشهادة.", "Complete all lessons first to get the certificate."),
-    "cert.print": ("طباعة / حفظ PDF", "Print / save as PDF"), "cert.awarded": ("تشهد أكاديمية أفقيا بأن", "Ufuqia Academy certifies that"),
+    "cert.print": ("طباعة / حفظ PDF", "Print / save as PDF"), "cert.awarded": ("تشهد أكاديمية وهج بأن", "WAHJ Academy certifies that"),
     "cert.completed": ("أتمّ/ت بنجاح دورة", "has successfully completed the course"),
     "cert.verify_at": ("للتحقق من صحتها:", "Verify authenticity at:"),
     "cert.verify_title": ("التحقق من شهادة", "Certificate verification"),
@@ -452,6 +452,18 @@ T.update({
     "admin.mail_off": ("إرسال البريد غير مهيّأ: الرسائل تُسجَّل هنا فقط. اضبط MAIL_SERVER و MAIL_FROM لإرسالها فعليًا.", "E-mail sending is not configured: messages are only recorded here. Set MAIL_SERVER and MAIL_FROM to really send them."),
     "admin.outbox_note": ("للمالك فقط: قد تحتوي الرسائل على روابط أحادية الاستخدام.", "Owner only: messages may contain one-time links."),
     "content.payment_instructions": ("تعليمات الدفع (بيانات الحساب)", "Payment instructions (account details)"),
+})
+
+
+T.update({
+    "notif.title": ("الإشعارات", "Notifications"), "notif.sub": ("آخر المستجدات على حسابك.", "Latest updates on your account."),
+    "notif.read_all": ("تعليم الكل كمقروء", "Mark all as read"), "notif.none": ("لا توجد إشعارات.", "No notifications."),
+    "review.title": ("التقييمات", "Reviews"), "review.save": ("حفظ تقييمي", "Save my review"),
+    "review.none": ("لا توجد تقييمات بعد.", "No reviews yet."),
+    "review.need_enroll": ("يمكن للمسجَّلين في الدورة فقط تقييمها.", "Only enrolled learners can review a course."),
+    "review.saved": ("تم حفظ تقييمك.", "Your review was saved."), "review.invalid": ("تعذّر حفظ التقييم، تحقق من البيانات.", "Could not save the review; please check the form."),
+    "f.rating": ("التقييم (من 5)", "Rating (out of 5)"), "f.comment": ("تعليقك", "Your comment"),
+    "admin.nav.reviews": ("التقييمات", "Reviews"), "admin.hide": ("إخفاء", "Hide"), "admin.show": ("إظهار", "Show"),
 })
 
 

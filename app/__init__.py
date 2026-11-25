@@ -13,7 +13,7 @@ from config import Config, TestConfig, ephemeral_secret
 from .extensions import csrf, db, limiter, login_manager, migrate
 from .i18n import LANGS, month_name, translate
 
-log = logging.getLogger("ufuqia")
+log = logging.getLogger("wahj")
 
 
 def create_app(config_object=None):
@@ -163,7 +163,13 @@ def _register_template_helpers(app):
             txt = f"{value:,.2f}".rstrip("0").rstrip(".") if value % 1 else f"{value:,.0f}"
             return f"{txt} {app.config['DEFAULT_CURRENCY']}"
 
-        return dict(t=t, lang=lang, dir="rtl" if lang == "ar" else "ltr", LANGS=LANGS,
+        def unread_count():
+            if not current_user.is_authenticated:
+                return 0
+            from .models import Notification
+            return Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+
+        return dict(unread_count=unread_count, t=t, lang=lang, dir="rtl" if lang == "ar" else "ltr", LANGS=LANGS,
                     money=money, now_year=__import__('datetime').date.today().year, tzname=app.config["ACADEMY_TZ_NAME"],
                     is_staff=current_user.is_authenticated and current_user.is_staff)
 

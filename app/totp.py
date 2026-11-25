@@ -35,7 +35,7 @@ def verify(secret, code, last_step=0, now=None, window=1):
     return None
 
 
-def provisioning_uri(email, secret, issuer="Ufuqia Academy"):
+def provisioning_uri(email, secret, issuer="WAHJ Academy"):
     return f"otpauth://totp/{quote(issuer)}:{quote(email)}?secret={secret}&issuer={quote(issuer)}&digits=6&period=30"
 
 

@@ -6,7 +6,7 @@
   <p class="no-print"><button type="button" class="btn btn--navy" data-print>{{ t('cert.print') }}</button>
     <a class="btn btn--ghost" href="{{ url_for('courses.learn', slug=cert.course.slug) }}">{{ t('common.back') }}</a></p>
   <article class="certificate">
-    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="150" height="119">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ t('brand.name') }}" width="150" height="113">
     <p class="certificate__eyebrow">{{ t('cert.title') }}</p>
     <p>{{ t('cert.awarded') }}</p>
     <h1>{{ cert.holder_name }}</h1>

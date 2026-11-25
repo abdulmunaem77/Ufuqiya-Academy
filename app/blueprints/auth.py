@@ -103,6 +103,9 @@ def register():
             start_session(user)
             audit("register", user.email)
             send_verification(user)
+            from ..notify import notify
+            notify(user.id, "welcome", "مرحبًا بك في وهج", "Welcome to WAHJ",
+                   "ابدأ باستعراض الدورات والورش.", "Start by browsing courses and workshops.", url_for("courses.index"), commit=True)
             flash("auth.welcome", "success")
             if current_app.config["REQUIRE_EMAIL_VERIFICATION"]:
                 flash("auth.verify_sent", "info")

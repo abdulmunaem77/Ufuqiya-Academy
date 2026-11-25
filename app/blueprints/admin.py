@@ -22,7 +22,7 @@ from ..forms import (AdminLoginForm, CategoryForm, ContentForm, CourseForm, Empt
                      StatusForm, TestimonialForm, WorkshopForm)
 from ..i18n import CONTENT_KEYS, site_default
 from ..mailer import send_mail
-from ..models import (PAYMENT_STATUSES, EmailOutbox, Payment, BOOKING_STATUSES, ENROLL_STATUSES, ROLE_OWNER, ROLE_STUDENT, STAFF_ROLES,
+from ..models import (Review, Notification, PAYMENT_STATUSES, EmailOutbox, Payment, BOOKING_STATUSES, ENROLL_STATUSES, ROLE_OWNER, ROLE_STUDENT, STAFF_ROLES,
                       AuditLog, Category, ConsultationBooking, ConsultationService, ContactMessage,
                       Course, Enrollment, Instructor, Lesson, SiteContent, Testimonial, User,
                       Workshop, WorkshopRegistration, utcnow)
@@ -355,6 +355,10 @@ def _set_status(model, oid, allowed, perm, audit_name, back):
     if not form.validate_on_submit():
         abort(400)
     old, obj.status = obj.status, form.status.data
+    if model is Enrollment and obj.status != old:
+        from ..notify import notify
+        notify(obj.user_id, "enrollment", "تحديث حالة تسجيلك", "Your enrolment status changed",
+               obj.course.title_ar, obj.course.title_en, url_for("student.dashboard"))
     db.session.commit()
     audit(audit_name, f"{model.__tablename__}:{oid}", f"{old}->{obj.status}")
     flash("admin.saved", "success")
@@ -366,6 +370,10 @@ def _set_status(model, oid, allowed, perm, audit_name, back):
 def booking_status(oid):
     resp = _set_status(ConsultationBooking, oid, BOOKING_STATUSES, "consultations", "booking_status", "admin.bookings")
     b = db.session.get(ConsultationBooking, oid)
+    if b and b.status in ("confirmed", "cancelled", "completed"):
+        from ..notify import notify
+        notify(b.user_id, "booking", "تحديث حجز الاستشارة", "Consultation booking update",
+               f"{b.service.title_ar}: {b.status}", f"{b.service.title_en}: {b.status}", url_for("student.dashboard"), commit=True)
     if b and b.status in ("confirmed", "cancelled"):
         send_mail(b.user.email, f"Consultation {b.status}",
                   f"{b.service.title_en} — {b.preferred_at:%Y-%m-%d %H:%M} UTC: {b.status}.\n"
@@ -599,6 +607,11 @@ def payment_decide(pid, decision):
         pay_service.confirm(p, current_user)
     else:
         pay_service.reject(p, current_user)
+    from ..notify import notify
+    ok = decision == "confirm"
+    notify(p.user_id, "payment", "تم تأكيد دفعتك" if ok else "تعذّر تأكيد دفعتك",
+           "Your payment was confirmed" if ok else "Your payment could not be confirmed", p.title, p.title,
+           url_for("student.dashboard") if ok else url_for("pay.view", pid=p.id))
     db.session.commit()
     audit(f"payment_{decision}", f"payment:{p.id}", f"{p.amount} {p.currency} user:{p.user_id}")
     send_mail(p.user.email, f"Payment {'confirmed' if decision == 'confirm' else 'rejected'}: {p.title}",
@@ -616,3 +629,29 @@ def payment_decide(pid, decision):
 def outbox():
     pagination = EmailOutbox.query.order_by(EmailOutbox.id.desc()).paginate(page=_page(), per_page=30, error_out=False)
     return render_template("admin/outbox.html", pagination=pagination, mail_on=current_app.config["MAIL_ENABLED"])
+
+
+# ---------------------------------------------------------------- reviews ---
+@bp.route("/reviews")
+@permission_required("courses")
+def reviews():
+    pagination = Review.query.order_by(Review.created_at.desc()).paginate(page=_page(), per_page=PER, error_out=False)
+    return render_template("admin/reviews.html", pagination=pagination, form=EmptyForm())
+
+
+@bp.route("/reviews/<int:rid>/<action>", methods=["POST"])
+@permission_required("courses")
+def review_moderate(rid, action):
+    if action not in ("toggle", "delete"):
+        abort(404)
+    r = db.get_or_404(Review, rid)
+    if not EmptyForm().validate_on_submit():
+        abort(400)
+    if action == "delete":
+        db.session.delete(r)
+    else:
+        r.is_visible = not r.is_visible
+    db.session.commit()
+    audit(f"review_{action}", f"review:{rid}")
+    flash("admin.saved", "success")
+    return redirect(url_for("admin.reviews"))

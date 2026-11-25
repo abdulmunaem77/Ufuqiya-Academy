@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% from 'partials/macros.html' import page_head, csrf with context %}
+{% block title %}{{ t('notif.title') }}{% endblock %}
+{% block content %}
+{{ page_head(t('notif.title'), t('notif.sub')) }}
+<section class="section section--ivory"><div class="wrap">
+  {% if items %}
+  <form method="post" action="{{ url_for('student.notifications_read_all') }}" class="mb">{{ csrf() }}<button class="btn btn--sm btn--ghost" type="submit">{{ t('notif.read_all') }}</button></form>
+  <ul class="rows">{% for n in items %}
+    <li class="{{ '' if n.is_read else 'is-unread' }}"><div><b>{{ n.loc('title', lang) }}</b><small>{{ n.loc('body', lang) }} · {{ n.created_at|dt }}</small></div>
+      <form method="post" action="{{ url_for('student.notification_open', nid=n.id) }}" class="inline">{{ csrf() }}<button class="btn btn--sm {{ 'btn--ghost' if n.is_read else 'btn--emerald' }}" type="submit">{{ t('common.view') }}</button></form></li>
+  {% endfor %}</ul>
+  {% else %}<p class="empty">{{ t('notif.none') }}</p>{% endif %}
+</div></section>
+{% endblock %}

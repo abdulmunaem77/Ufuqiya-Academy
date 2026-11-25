@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'partials/macros.html' import page_head, course_card, csrf, sample_badge, post_btn with context %}
+{% from 'partials/macros.html' import page_head, course_card, csrf, field, sample_badge, post_btn with context %}
 {% block title %}{{ loc(course, 'title') }}{% endblock %}
 {% block description %}{{ loc(course, 'summary') }}{% endblock %}
 {% block content %}
@@ -44,6 +44,16 @@
     </aside>
   </div>
 </section>
+<section class="section section--sand section--tight" id="reviews"><div class="wrap">
+  <h2>{{ t('review.title') }} {% if summary[1] %}<span class="stars" aria-label="{{ summary[0] }}/5">★ {{ summary[0] }} <small>({{ summary[1] }})</small></span>{% endif %}</h2>
+  {% if can_review %}
+  <form class="form card-form review-form" method="post" action="{{ url_for('courses.review', slug=course.slug) }}" novalidate>{{ csrf() }}
+    {{ field(review_form.rating) }}{{ field(review_form.comment, rows=3, maxlength=1000) }}
+    <button class="btn btn--navy" type="submit">{{ t('review.save') }}</button></form>
+  {% elif current_user.is_authenticated %}<p class="fineprint">{{ t('review.need_enroll') }}</p>{% endif %}
+  <ul class="rows">{% for r in reviews %}<li><div><b>{{ r.user.name }}</b> <span class="stars">{{ '★' * r.rating }}{{ '☆' * (5 - r.rating) }}</span><small>{{ r.comment }}</small></div></li>
+  {% else %}<li class="empty">{{ t('review.none') }}</li>{% endfor %}</ul>
+</div></section>
 {% if related %}
 <section class="section section--sand section--tight"><div class="wrap">
   <h2>{{ t('course.related') }}</h2><div class="grid grid--3">{% for c in related %}{{ course_card(c) }}{% endfor %}</div></div></section>

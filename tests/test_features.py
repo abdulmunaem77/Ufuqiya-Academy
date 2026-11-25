@@ -373,3 +373,135 @@ def test_db_url_normalisation(monkeypatch):
     assert config._db_url().startswith("postgresql+psycopg://")
     monkeypatch.setenv("DATABASE_URL", "sqlite:///x.db")
     assert config._db_url() == "sqlite:///x.db"
+
+
+# ---------------------------------------------------------------- backup / restore
+def test_sqlite_backup_restore_roundtrip(tmp_path):
+    from app.backup import backup, restore, kind
+    from app.extensions import db as _db
+    import sqlite3
+    dbfile = tmp_path / "live.db"
+    uri = f"sqlite:///{dbfile}"
+    con = sqlite3.connect(dbfile); con.execute("create table t(x text)"); con.execute("insert into t values('before')"); con.commit(); con.close()
+    assert kind(uri) == "sqlite"
+    b = backup(uri, tmp_path / "bk")
+    assert b.suffix == ".sqlite3" and (b.stat().st_mode & 0o777) == 0o600
+    con = sqlite3.connect(dbfile); con.execute("update t set x='after'"); con.execute("insert into t values('extra')"); con.commit(); con.close()
+    safety = restore(uri, b, tmp_path / "safe")
+    rows = sqlite3.connect(dbfile).execute("select x from t").fetchall()
+    assert rows == [("before",)]
+    assert safety and sqlite3.connect(safety).execute("select count(*) from t").fetchone() == (2,)  # nothing lost
+    # pruning keeps the newest N
+    for _ in range(3):
+        backup(uri, tmp_path / "keep", keep=2)
+        time.sleep(1.1)
+    assert len(list((tmp_path / "keep").glob("*.sqlite3"))) == 2
+
+
+def test_restore_rejects_wrong_or_corrupt_files(tmp_path):
+    from app.backup import restore, BackupError
+    uri = f"sqlite:///{tmp_path/'x.db'}"
+    bad = tmp_path / "junk.sqlite3"; bad.write_bytes(b"not a database")
+    with pytest.raises(Exception):
+        restore(uri, bad, tmp_path / "s")
+    wrong = tmp_path / "x.pgdump"; wrong.write_bytes(b"PGDMP")
+    with pytest.raises(BackupError):
+        restore(uri, wrong, tmp_path / "s")
+    with pytest.raises(BackupError):
+        restore(uri, tmp_path / "missing.sqlite3", tmp_path / "s")
+
+
+def test_restore_cli_requires_confirmation(app, tmp_path):
+    runner = app.test_cli_runner()
+    f = tmp_path / "a.sqlite3"; f.write_bytes(b"x")
+    r = runner.invoke(args=["restore-db", str(f)])
+    assert r.exit_code != 0 and "--yes" in r.output
+
+
+# --------------------------------------------------------------- reviews / notifications
+def test_reviews_only_for_active_enrolees_and_average(app, client, student):
+    from app.models import Review
+    slug = "generative-ai-everyday-work"
+    login(client, "student@example.com")
+    assert post(client, f"/courses/{slug}/review", {"rating": "5", "comment": "x"}, page=f"/courses/{slug}").status_code == 403
+    post(client, f"/courses/{slug}/enroll", page=f"/courses/{slug}")
+    assert post(client, f"/courses/{slug}/review", {"rating": "9", "comment": ""}, page="/account").status_code == 302
+    assert Review.query.count() == 0  # out-of-range rejected by the form
+    post(client, f"/courses/{slug}/review", {"rating": "4", "comment": "Good <b>course</b>"}, page="/account")
+    post(client, f"/courses/{slug}/review", {"rating": "5", "comment": "Updated"}, page="/account")
+    assert Review.query.count() == 1 and Review.query.one().rating == 5  # one per user: updated in place
+    course = Course.query.filter_by(slug=slug).one()
+    assert course.rating_summary() == (5.0, 1)
+    other = make_user("r2@example.com"); c2 = app.test_client(); login(c2, "r2@example.com")
+    post(c2, f"/courses/{slug}/enroll", page=f"/courses/{slug}")
+    post(c2, f"/courses/{slug}/review", {"rating": "4", "comment": "<script>alert(1)</script>"}, page="/account")
+    assert course.rating_summary() == (4.5, 2)
+    html = app.test_client().get(f"/courses/{slug}").get_data(as_text=True)
+    assert "<script>alert(1)</script>" not in html and "Updated" in html
+
+
+def test_review_moderation_hides_from_public_and_average(app, client, student, owner):
+    from app.models import Review
+    slug = "generative-ai-everyday-work"
+    login(client, "student@example.com")
+    post(client, f"/courses/{slug}/enroll", page=f"/courses/{slug}")
+    post(client, f"/courses/{slug}/review", {"rating": "1", "comment": "spammy"}, page="/account")
+    rid = Review.query.one().id
+    adm = app.test_client(); login(adm, "owner@example.com", admin=True)
+    assert adm.get("/admin/reviews").status_code == 200
+    post(adm, f"/admin/reviews/{rid}/toggle", page="/admin/reviews")
+    assert "spammy" not in app.test_client().get(f"/courses/{slug}").get_data(as_text=True)
+    assert Course.query.filter_by(slug=slug).one().rating_summary() == (0.0, 0)
+    assert post(client, f"/admin/reviews/{rid}/delete", page="/account").status_code == 403  # students cannot moderate
+    post(adm, f"/admin/reviews/{rid}/delete", page="/admin/reviews")
+    assert Review.query.count() == 0
+
+
+def test_db_rejects_invalid_rows_even_if_app_is_bypassed(app, student):
+    from sqlalchemy.exc import IntegrityError
+    from app.models import Review
+    db.session.add(Review(user_id=student.id, course_id=1, rating=9)); 
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+    db.session.add(Payment(user_id=student.id, kind="course", target_id=1, amount=-5))
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+    c = Course.query.first(); c.price = -1
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+    u = User(email="bad@example.com", name="Bad", role="superuser", password_hash="x")
+    db.session.add(u)
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+
+
+def test_notifications_flow_and_ownership(app, client, student):
+    from app.models import Notification
+    p = Payment(user_id=student.id, kind="course", target_id=1, title="X Course", amount=10, status="submitted")
+    db.session.add(p); db.session.commit()
+    own = make_user("own@example.com", role="owner"); adm = app.test_client(); login(adm, "own@example.com", admin=True)
+    post(adm, f"/admin/payments/{p.id}/confirm", page="/admin/payments")
+    n = Notification.query.filter_by(user_id=student.id, kind="payment").one()
+    assert not n.is_read
+    login(client, "student@example.com")
+    html = client.get("/notifications").get_data(as_text=True)
+    assert "X Course" in html and 'class="bell__n"' in client.get("/dashboard").get_data(as_text=True)
+    other = make_user("snoop@example.com"); c2 = app.test_client(); login(c2, "snoop@example.com")
+    assert post(c2, f"/notifications/{n.id}/open", page="/account").status_code == 404  # not yours
+    r = post(client, f"/notifications/{n.id}/open", page="/account")
+    assert r.status_code == 302 and db.session.get(Notification, n.id).is_read
+    assert 'class="bell__n"' not in client.get("/dashboard").get_data(as_text=True)
+
+
+def test_new_brand_everywhere(client):
+    for lang, name in (("ar", "أكاديمية وهج للتدريب والاستشارات الرقمية"), ("en", "WAHJ Academy")):
+        client.get(f"/lang/{lang}")
+        for url in ("/", "/about", "/courses/", "/login", "/contact"):
+            html = client.get(url).get_data(as_text=True)
+            assert name in html, (lang, url)
+            assert "أفقيا" not in html and "Ufuqia" not in html and "ufuqia" not in html.lower().replace("ufuqiya-academy", ""), (lang, url)
+    assert "من شغف التعلم إلى التميز" in client.get("/lang/ar", follow_redirects=True).get_data(as_text=True)

@@ -4,12 +4,12 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db, limiter
-from ..forms import EmptyForm
+from ..forms import EmptyForm, ReviewForm
 import secrets
 
 from ..media import embed_url
 from ..models import (ENROLL_ACTIVE, ENROLL_PENDING, LEVELS, Category, Certificate, Course, Enrollment,
-                      Lesson, LessonProgress)
+                      Lesson, LessonProgress, Review)
 from ..payments import cancel_open_payment, get_or_create_payment, payment_for
 from ..security import verified_or_redirect
 from ..security import audit
@@ -76,8 +76,15 @@ def detail(slug):
                                    Course.is_published.is_(True)).limit(3).all())
     enr = _enrollment(course)
     pay = payment_for(current_user, "course", enr.id) if enr and enr.status == "pending" else None
+    reviews = (Review.query.filter_by(course_id=course.id, is_visible=True)
+               .order_by(Review.created_at.desc()).limit(20).all())
+    mine = Review.query.filter_by(course_id=course.id, user_id=current_user.id).first() \
+        if current_user.is_authenticated else None
+    review_form = ReviewForm(rating=str(mine.rating) if mine else "5", comment=mine.comment if mine else "")
+    can_review = bool(enr and enr.status == ENROLL_ACTIVE)
     return render_template("courses/detail.html", course=course, enrollment=enr, pay=pay,
-                           related=related, form=EmptyForm())
+                           related=related, form=EmptyForm(), reviews=reviews, summary=course.rating_summary(),
+                           mine=mine, can_review=can_review, review_form=review_form)
 
 
 @bp.route("/<slug>/enroll", methods=["POST"])
@@ -191,4 +198,34 @@ def certificate(slug):
         db.session.add(cert)
         db.session.commit()
         audit("certificate_issued", f"certificate:{cert.id}")
+        from ..notify import notify
+        notify(current_user.id, "certificate", "صدرت شهادتك", "Your certificate was issued",
+               course.title_ar, course.title_en, url_for("courses.certificate", slug=slug), commit=True)
     return render_template("courses/certificate.html", cert=cert, verify_url=url_for("main.verify_certificate", code=cert.code, _external=True))
+
+
+@bp.route("/<slug>/review", methods=["POST"])
+@login_required
+@limiter.limit("20 per hour")
+def review(slug):
+    course = _course_or_404(slug)
+    enr = _enrollment(course)
+    if not enr or enr.status != ENROLL_ACTIVE:
+        abort(403)  # only active enrolees may rate
+    form = ReviewForm()
+    if not form.validate_on_submit():
+        flash("review.invalid", "error")
+        return redirect(url_for("courses.detail", slug=slug) + "#reviews")
+    row = Review.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+    if row:
+        row.rating, row.comment = int(form.rating.data), form.comment.data or ""
+    else:
+        db.session.add(Review(user_id=current_user.id, course_id=course.id, rating=int(form.rating.data),
+                              comment=form.comment.data or ""))
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+    audit("review_save", f"course:{course.id}", form.rating.data)
+    flash("review.saved", "success")
+    return redirect(url_for("courses.detail", slug=slug) + "#reviews")

@@ -14,7 +14,8 @@ def _db_url():
     url = os.environ.get("DATABASE_URL")
     if not url:
         base = Path("/tmp") if os.environ.get("VERCEL") else BASE_DIR / "instance"
-        return f"sqlite:///{base / 'ufuqia.db'}"
+        legacy = base / "ufuqia.db"  # pre-rebrand database: keep using it so no local data is lost
+        return f"sqlite:///{legacy if legacy.exists() and not (base / 'wahj.db').exists() else base / 'wahj.db'}"
     for prefix in ("postgres://", "postgresql://"):
         if url.startswith(prefix):
             return "postgresql+psycopg://" + url[len(prefix):]
@@ -90,7 +91,7 @@ class Config:
             raise RuntimeError("Vercel's filesystem is ephemeral: set DATABASE_URL to a PostgreSQL database.")
         if cls.ON_VERCEL and cls.RATELIMIT_STORAGE_URI.startswith("memory"):
             import logging
-            logging.getLogger("ufuqia").warning(
+            logging.getLogger("wahj").warning(
                 "Rate limits are per serverless instance (memory://). Set RATELIMIT_STORAGE_URI to Redis.")
 
 

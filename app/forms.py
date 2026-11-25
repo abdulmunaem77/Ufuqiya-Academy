@@ -176,6 +176,11 @@ class CourseForm(_Entity):
     is_sample = _bool("is_sample")
 
 
+class ReviewForm(_F):
+    rating = SelectField("rating", choices=[(str(i), str(i)) for i in range(5, 0, -1)], validators=[REQ])
+    comment = TextAreaField("comment", [Optional(), length(1000)], filters=[strip])
+
+
 class LessonForm(_F):
     position = IntegerField("position", [REQN, NumberRange(1, 500, message="val.number")])
     title_ar = StringField("title_ar", [REQ, length(200)], filters=[strip])

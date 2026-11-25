@@ -1,7 +1,7 @@
 /* ==========================================================================
-   Ufuqia Academy — design system
+   WAHJ Academy — design system
    Colour budget (by surface area): 60% navy · 25% ivory · 10% emerald · 5% gold
-   Sampled from the logo: navy #062446, emerald #03625E, gold #BA903A
+   Sampled from the WAHJ logo: navy #082048, teal #00A898 (darkened to #007A6D for text contrast), gold #D4A23F, blue #0D4A8A
    Logical properties are used throughout so RTL/LTR need no overrides.
    ========================================================================== */
 @font-face{font-family:"Tajawal";font-weight:400;font-display:swap;src:url("../fonts/Tajawal-Regular.woff2") format("woff2")}
@@ -10,12 +10,12 @@
 @font-face{font-family:"Tajawal";font-weight:800;font-display:swap;src:url("../fonts/Tajawal-ExtraBold.woff2") format("woff2")}
 
 :root{
-  --navy:#062446; --navy-2:#0A3260; --navy-3:#103E75; --navy-deep:#041A33;
+  --navy:#082048; --navy-2:#0A3B75; --navy-3:#0D4A8A; --navy-deep:#05152F;
   --ivory:#FBF6EA; --ivory-2:#F3EBD6; --ivory-3:#E8DDC0; --paper:#FFFDF7;
-  --emerald:#03625E; --emerald-2:#047B76; --emerald-tint:#DCEBE8;
-  --gold:#BA903A; --gold-2:#D1A84F; --gold-tint:#F4E8CC;
+  --emerald:#007A6D; --emerald-2:#00A898; --emerald-tint:#D9EFEA;
+  --gold:#D4A23F; --gold-2:#E4B95F; --gold-tint:#F8ECCF;
   --ink:#0B1B30; --muted:#51607A; --line:#DCD2B8; --danger:#9B2C2C; --danger-tint:#F7E1DE;
-  --radius:14px; --radius-sm:9px; --shadow:0 1px 2px rgba(6,36,70,.06),0 8px 24px rgba(6,36,70,.08);
+  --radius:14px; --radius-sm:9px; --shadow:0 1px 2px rgba(8,32,72,.06),0 8px 24px rgba(8,32,72,.08);
   --font:"Tajawal","Segoe UI",Tahoma,system-ui,sans-serif;
   --wrap:1180px; --gutter:clamp(16px,4vw,32px);
 }
@@ -112,7 +112,7 @@ ul,ol{padding-inline-start:1.2em}
 
 /* ---- hero ---------------------------------------------------------------------------- */
 .hero{position:relative;background:var(--navy);color:#E8EDF5;overflow:hidden;padding-top:clamp(2.5rem,6vw,4.5rem)}
-.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 85% 0%,rgba(3,98,94,.55),transparent 60%),radial-gradient(40% 60% at 5% 100%,rgba(186,144,58,.18),transparent 65%);pointer-events:none}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 85% 0%,rgba(0,122,109,.55),transparent 60%),radial-gradient(40% 60% at 5% 100%,rgba(212,162,63,.18),transparent 65%);pointer-events:none}
 .hero__horizon{position:absolute;inset-inline:0;bottom:56px;width:100%;height:220px;color:var(--gold);opacity:.55;pointer-events:none}
 .hero__inner{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(1.5rem,4vw,3.5rem);align-items:center;padding-bottom:clamp(2.5rem,5vw,4rem)}
 .hero h1{color:#fff;font-size:clamp(2.1rem,5vw,3.5rem);line-height:1.25}
@@ -135,7 +135,7 @@ ul,ol{padding-inline-start:1.2em}
 input[type=text],input[type=email],input[type=password],input[type=search],input[type=number],input[type=datetime-local],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:.7rem .9rem;line-height:1.4}
 input:disabled{background:var(--ivory-2);color:var(--muted)}
 textarea{resize:vertical;min-height:7rem}
-input:focus,textarea:focus,select:focus{border-color:var(--emerald);outline:3px solid rgba(3,98,94,.22);outline-offset:0}
+input:focus,textarea:focus,select:focus{border-color:var(--emerald);outline:3px solid rgba(0,122,109,.22);outline-offset:0}
 .hero__search input{background:var(--ivory)}
 select{appearance:auto}
 .form .field{margin-bottom:1.1rem}
@@ -150,7 +150,7 @@ select{appearance:auto}
 
 /* ---- cards ------------------------------------------------------------------------------- */
 .card{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s}
-.card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(6,36,70,.08),0 16px 32px rgba(6,36,70,.12)}
+.card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(8,32,72,.08),0 16px 32px rgba(8,32,72,.12)}
 .card__media{position:relative;display:flex;align-items:center;justify-content:center;height:130px;color:var(--gold-2);background:linear-gradient(135deg,var(--navy),var(--navy-3))}
 .card__media--artificial-intelligence{background:linear-gradient(135deg,var(--navy),var(--emerald))}
 .card__media--technology{background:linear-gradient(135deg,var(--navy-deep),var(--navy-3))}
@@ -199,7 +199,7 @@ select{appearance:auto}
 
 /* ---- inner pages --------------------------------------------------------------------------- */
 .page-head{background:var(--navy);color:#E8EDF5;padding-block:clamp(2rem,5vw,3.4rem);border-bottom:4px solid var(--gold);position:relative;overflow:hidden}
-.page-head::after{content:"";position:absolute;inset-inline-end:-80px;top:-80px;width:300px;height:300px;border-radius:50%;border:2px solid rgba(186,144,58,.35);box-shadow:0 0 0 28px rgba(3,98,94,.12)}
+.page-head::after{content:"";position:absolute;inset-inline-end:-80px;top:-80px;width:300px;height:300px;border-radius:50%;border:2px solid rgba(212,162,63,.35);box-shadow:0 0 0 28px rgba(0,122,109,.12)}
 .page-head .wrap{position:relative;z-index:1}
 .page-head h1{color:#fff;margin-bottom:.3em}
 .page-head__sub{font-size:1.1rem;color:#CBD6E6;max-width:44rem;margin:0}
@@ -239,7 +239,7 @@ select{appearance:auto}
 .info-card dt{color:var(--gold-2);font-weight:700;margin-top:1rem}.info-card dd{margin:0}
 .info-card .btn--ghost{color:#fff;border-color:rgba(255,255,255,.5)}
 .info-card .fineprint{color:#B9C5D8}
-.auth{min-height:70vh;display:grid;place-items:center;padding:3rem var(--gutter);background:var(--navy);background-image:radial-gradient(50% 60% at 50% 0%,rgba(3,98,94,.5),transparent 70%)}
+.auth{min-height:70vh;display:grid;place-items:center;padding:3rem var(--gutter);background:var(--navy);background-image:radial-gradient(50% 60% at 50% 0%,rgba(0,122,109,.5),transparent 70%)}
 .auth__card{width:100%;max-width:440px;background:var(--ivory);border-radius:var(--radius);padding:clamp(1.4rem,4vw,2.2rem);box-shadow:0 20px 50px rgba(0,0,0,.35);border-top:5px solid var(--gold)}
 .auth__card h1{font-size:1.8rem}.auth__sub{color:var(--muted)}.auth__alt{margin:1.2rem 0 0;text-align:center;font-size:.97rem}
 .error-page{text-align:center}.error-page__code{font-size:clamp(4rem,14vw,8rem);font-weight:800;color:var(--gold);line-height:1;margin:0}
@@ -267,7 +267,7 @@ progress::-moz-progress-bar{background:var(--emerald);border-radius:999px}
 .lesson-list a{display:flex;gap:.7rem;align-items:center;padding:.55rem .7rem;border-radius:var(--radius-sm);color:#E8EDF5;text-decoration:none}
 .lesson-list a:hover{background:rgba(255,255,255,.08)}
 .lesson-list i{flex:0 0 1.8rem;height:1.8rem;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);display:grid;place-items:center;font-style:normal;font-size:.85rem}
-.lesson-list .is-current a{background:rgba(186,144,58,.22)}
+.lesson-list .is-current a{background:rgba(212,162,63,.22)}
 .lesson-list .is-done i{background:var(--emerald-2);border-color:var(--emerald-2);color:#fff}
 .learn__main{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(1.2rem,3vw,2.2rem)}
 
@@ -351,4 +351,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:var(-
   body,.section--sand{background:#fff!important}
   .certificate{box-shadow:none;margin:0 auto;page-break-inside:avoid}
 }
+/* ---- v3: notifications & reviews -------------------------------------------------- */
+.bell{position:relative;text-decoration:none;font-size:1.2rem;padding:.2rem .5rem}
+.bell__n{position:absolute;inset-block-start:-4px;inset-inline-end:-2px;background:var(--gold);color:var(--navy-deep);font-size:.7rem;border-radius:999px;padding:0 .4rem;line-height:1.4}
+.is-unread{border-inline-start:4px solid var(--gold)}
+.mb{margin-bottom:1rem}
+.stars{color:var(--gold);font-weight:700;white-space:nowrap}.stars small{color:var(--muted);font-weight:400}
+.review-form{max-width:560px;margin-bottom:1.2rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
